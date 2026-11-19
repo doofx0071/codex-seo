@@ -106,24 +106,14 @@ python -c 'import hashlib; from pathlib import Path; print(hashlib.sha256(Path("
 
 ## Task 5 GitHub publication status
 
-- The Phase 1 source and documentation are committed locally on `codex-native-support`. The worktree is clean. The branch is 10 commits ahead of remote `origin/codex-native-support` (remote head `36a91f4`).
-- GitHub confirmed the repository is public, with default branch `main`, description `Codex-native SEO skills and agents, adapted from AgriciDaniel/claude-seo (MIT licensed).`, and no homepage URL. GitHub CLI is installed but not authenticated in this environment. `git push origin codex-native-support` failed because Git could not prompt for credentials; no GitHub branch ref or repository settings were changed.
-- On the workstation, authenticate and push the prepared branch, then apply the approved repository metadata:
+- Published the complete Phase 1 source tree to the public `helx0071/codex-seo` repository on `codex-native-support`. GitHub's stored tree hash matched the prepared local `HEAD` tree before this publication record was added.
+- The GitHub connector created one consolidated snapshot commit on top of the previous remote head because Git CLI authentication was unavailable. The earlier 10-commit local sequence is retained on the local `codex-native-support-local-history` backup branch; the published source tree contains the same code and documentation state.
+- Changed the repository default branch from `main` to `codex-native-support`, set its description to `SEO toolkit and plugin for Codex and ChatGPT, with evidence-backed audits and specialist agents.`, and set its homepage to `https://github.com/helx0071/codex-seo/tree/codex-native-support#readme`. Verified these values through GitHub's repository API and settings page.
+- Clone the published branch on a workstation:
 
 ```bash
-gh auth login
-git push --set-upstream origin codex-native-support
-gh repo edit helx0071/codex-seo \
-  --default-branch codex-native-support \
-  --description "SEO toolkit and plugin for Codex and ChatGPT, with evidence-backed audits and specialist agents." \
-  --homepage "https://github.com/helx0071/codex-seo/tree/codex-native-support#readme"
-```
-
-- Verify the push and settings with `gh repo view helx0071/codex-seo --json defaultBranchRef,description,homepageUrl,url` and `git status --short --branch`.
-- If transferring this checkout to a workstation before the GitHub push, use the supplied `codex-seo-phase1.bundle`:
-
-```bash
-git clone --branch codex-native-support /path/to/codex-seo-phase1.bundle codex-seo
+git clone --branch codex-native-support https://github.com/helx0071/codex-seo.git
 cd codex-seo
-git remote set-url origin https://github.com/helx0071/codex-seo.git
 ```
+
+- For future local commits, authenticate the GitHub CLI or Git credential manager on the workstation, then push normally. Verify with `git status --short --branch` and `gh repo view helx0071/codex-seo --json defaultBranchRef,description,homepageUrl,url`.
