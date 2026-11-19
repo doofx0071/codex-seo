@@ -28,6 +28,10 @@ _AVAILABILITY = {
     "PreOrder": ("preorder", "pre-order", "pre order"),
     "BackOrder": ("backorder", "back-order", "back order"),
 }
+_NEGATED_AVAILABILITY = re.compile(
+    r"\bnot\s+(?:(?:currently|yet)\s+)?(?:in stock|available(?: now| to order)?|"
+    r"out of stock|sold out|unavailable)\b"
+)
 
 
 def _visible(element) -> bool:
@@ -74,19 +78,18 @@ def _visible_facts(html: str) -> dict:
             continue
         props = element.get("itemprop", [])
         props = {p.lower() for p in (props if isinstance(props, list) else str(props).split())}
-        content = str(element.get("content", "")).strip()
         text = element.get_text(" ", strip=True)
+        # Attributes on meta/data elements describe markup, not rendered text.
+        if not text:
+            continue
         if "price" in props:
-            candidate = content or text
-            numeric = re.findall(r"(?<!\d)\d+(?:[.,]\d{1,2})?(?!\d)", candidate)
+            numeric = re.findall(r"(?<!\d)\d+(?:[.,]\d{1,2})?(?!\d)", text)
             if len(numeric) == 1:
                 prices.append(numeric[0].replace(",", ""))
         if "pricecurrency" in props:
-            currencies.append(content or text)
+            currencies.append(text)
         if "sku" in props or "productid" in props:
-            skus.append(content or text)
-        if "availability" in props:
-            availability_text.append(content or text)
+            skus.append(text)
 
     for option in soup.select("select option[selected]"):
         if _visible(option):
@@ -96,23 +99,55 @@ def _visible_facts(html: str) -> dict:
     selected_variant = _one(skus)
 
     availability_value = None
-    if availability_text:
-        for text in availability_text:
-            token = text.rsplit("/", 1)[-1].strip().lower()
-            for canonical, phrases in _AVAILABILITY.items():
-                if token == canonical.lower() or any(phrase in token for phrase in phrases):
-                    if availability_value and availability_value != canonical:
-                        availability_value = "ambiguous"
-                        break
-                    availability_value = canonical
-    else:
-        availability_text = [str(text).strip() for text in soup.find_all(string=True)
-                             if text.strip() and _visible(text.parent)]
+    if not availability_text:
+        def tokens(element) -> set[str]:
+            raw = element.get("itemprop", [])
+            return {str(item).lower() for item in (raw if isinstance(raw, list) else str(raw).split())}
+
+        product_scopes = [el for el in soup.find_all(True) if _visible(el) and
+                          ("product" in tokens(el) or "product" in str(el.get("itemtype", "")).lower())]
+        offer_scopes = [el for el in soup.find_all(True) if _visible(el) and
+                        ("offers" in tokens(el) or "offer" in str(el.get("itemtype", "")).lower())]
+        selected_product_scopes = []
+        if identity["status"] == "available":
+            for scope in product_scopes:
+                names = [node.get_text(" ", strip=True) for node in scope.find_all(attrs={"itemprop": True})
+                         if "name" in tokens(node) and _visible(node)]
+                headings_in_scope = [node.get_text(" ", strip=True) for node in scope.find_all("h1") if _visible(node)]
+                if any(name.casefold() == identity["value"].casefold() for name in names + headings_in_scope):
+                    selected_product_scopes.append(scope)
+
+        if len(selected_product_scopes) == 1:
+            product_scope = selected_product_scopes[0]
+            associated_offers = [scope for scope in offer_scopes if scope is product_scope or product_scope in scope.parents]
+            scopes = associated_offers or [product_scope]
+        elif product_scopes:
+            # A structured Product scope exists, but visible identity did not
+            # select one. Do not borrow availability from a sibling product.
+            scopes = []
+            availability_value = "ambiguous" if len(selected_product_scopes) > 1 else None
+        elif len(offer_scopes) == 1:
+            scopes = offer_scopes
+        elif len(offer_scopes) > 1:
+            scopes = []
+            availability_value = "ambiguous"
+        else:
+            scopes = []
+
+        scoped_text = [str(text).strip() for scope in scopes for text in scope.find_all(string=True)
+                       if text.strip() and _visible(text.parent)]
+        availability_text.extend(scoped_text)
+
+    if availability_value != "ambiguous" and availability_text:
         visible_text = " ".join(availability_text).lower()
-        availability_hits = [key for key, phrases in _AVAILABILITY.items() if any(p in visible_text for p in phrases)]
-        availability_value = availability_hits[0] if len(availability_hits) == 1 else (
-            "ambiguous" if availability_hits else None
-        )
+        if _NEGATED_AVAILABILITY.search(visible_text):
+            availability_value = "ambiguous"
+        else:
+            availability_hits = [key for key, phrases in _AVAILABILITY.items()
+                                 if any(phrase in visible_text for phrase in phrases)]
+            availability_value = availability_hits[0] if len(availability_hits) == 1 else (
+                "ambiguous" if availability_hits else None
+            )
     availability = _fact(availability_value, "available") if availability_value not in (None, "ambiguous") else (
         _fact(None, "ambiguous") if availability_value == "ambiguous" else _fact()
     )
