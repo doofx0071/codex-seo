@@ -44,6 +44,46 @@ Fetch and parse any product page for on-page SEO quality.
 3. Analyze product-specific signals (below)
 ```
 
+### Store Discovery and Sample Selection
+
+When given a store or domain rather than a product URL, first follow relevant
+public internal links from the homepage, navigation, category and collection
+pages to locate product pages. Check observed sitemap URLs for additional
+candidate product pages, and record which pages and sitemap locations were
+checked. A sitemap with no product URLs does not establish that products do
+not exist or are not indexed; products may be discoverable through links,
+other sitemaps, or outside the checked scope.
+
+Adapt the sample to what is publicly discoverable:
+
+- **Zero product pages found:** describe an empty catalog only as an
+  observation within the checked scope. Ask whether the store is prelaunch
+  before treating it as an issue or recommending catalog changes. If
+  prelaunch status is confirmed, frame next steps around the planned launch
+  and the pages that will be published. If status is unknown, say so.
+- **One product page found:** review that page in depth and state that a single
+  URL cannot establish how other product templates behave.
+- **Multiple product pages found:** choose a small representative sample
+  across available product types, variants, and categories; state the sample
+  and its limits rather than generalizing it to the whole catalog.
+
+On the same public scope, check whether shipping, returns/refunds, privacy,
+terms, and contact details are discoverable through internal links or the
+footer. Record each as found, not found in the checked scope, or unavailable;
+do not assume a policy exists from a search snippet or an unrelated page.
+
+For page source, response headers, and indexing, label each result as
+**observed**, **measured**, **inferred**, or **unavailable** and explain the
+basis. Source text or a rendered page can show what was observed, but does not
+by itself prove response headers, crawl coverage, or indexation. If headers
+were not exposed, say so and identify a raw HTTP response as verification
+evidence. If the rendered page could not be inspected, identify browser
+rendering as the evidence needed. If indexing status is not available, say
+why and identify URL Inspection or a relevant Search Console export as the
+evidence needed. Do not present a sitemap entry, a missing sitemap URL, HTML,
+or a search snippet as proof that a product is indexed or absent from the
+index.
+
 ### Product SEO Checklist
 
 #### Title Tag
