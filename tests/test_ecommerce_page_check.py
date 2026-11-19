@@ -71,11 +71,11 @@ def test_reports_conflicting_price_currency_and_availability():
 
 def test_matches_variant_by_explicit_identity():
     blue = {
-        "@type": "Product", "name": "Trail Shoe Blue 8", "sku": "BLUE-8",
+        "@type": "Product", "name": "Blue / 8", "sku": "BLUE-8",
         "offers": {"@type": "Offer", "price": "89.99", "priceCurrency": "USD"},
     }
     black = {
-        "@type": "Product", "name": "Trail Shoe Black 8", "sku": "BLACK-8",
+        "@type": "Product", "name": "Black / 8", "sku": "BLACK-8",
         "offers": {"@type": "Offer", "price": "99.99", "priceCurrency": "USD"},
     }
     schema = {"@context": "https://schema.org", "@type": "ProductGroup", "name": "Trail Shoe",
@@ -90,7 +90,7 @@ def test_matches_variant_by_explicit_identity():
 
     result = check_page(html)
 
-    assert result["visible_facts"]["selected_variant"] == {"status": "available", "value": "BLACK-8"}
+    assert result["visible_facts"]["selected_variant"] == {"status": "available", "value": "Black / 8"}
     assert result["comparisons"]["identity"]["status"] == "match"
     assert result["comparisons"]["selected_variant"]["status"] == "match"
     assert result["comparisons"]["amount"]["schema"] == "99.99"
@@ -196,3 +196,48 @@ def test_availability_from_another_product_scope_is_ignored():
 
     assert result["visible_facts"]["availability"] == {"status": "available", "value": "InStock"}
     assert result["comparisons"]["availability"]["status"] == "match"
+
+
+def test_no_longer_in_stock_is_not_reported_as_in_stock():
+    html = page(
+        '<h1>Trail Shoe</h1><section itemprop="offers"><p>No longer in stock</p></section>',
+        product(price="89.99", priceCurrency="USD", availability="https://schema.org/InStock"),
+    )
+
+    result = check_page(html)
+
+    assert result["visible_facts"]["availability"]["status"] in {"ambiguous", "unavailable"}
+    assert result["comparisons"]["availability"]["status"] in {"ambiguous", "unavailable"}
+
+
+def test_hidden_option_value_does_not_identify_selected_variant():
+    variant = {
+        "@type": "Product", "name": "Trail Shoe Black 8", "sku": "BLACK-8",
+        "offers": {"@type": "Offer", "price": "99.99", "priceCurrency": "USD"},
+    }
+    schema = {"@context": "https://schema.org", "@type": "ProductGroup", "name": "Trail Shoe",
+              "hasVariant": [variant]}
+    html = page(
+        '<h1>Trail Shoe</h1><select><option selected value="BLACK-8">Choose a variant</option></select>',
+        schema,
+    )
+
+    result = check_page(html)
+
+    assert result["visible_facts"]["selected_variant"]["status"] in {"unavailable", "ambiguous"}
+    assert result["comparisons"]["selected_variant"]["status"] != "match"
+    assert result["comparisons"]["selected_variant"]["schema"] is None
+
+
+def test_comma_decimal_price_is_not_normalized_as_thousands():
+    html = page(
+        '<h1>Trail Shoe</h1><section itemprop="offers">'
+        '<span itemprop="price">89,99</span></section>',
+        product(price="8999", priceCurrency="USD"),
+    )
+
+    result = check_page(html)
+
+    assert result["visible_facts"]["amount"]["status"] in {"unavailable", "ambiguous"}
+    assert result["visible_facts"]["amount"]["value"] != "8999"
+    assert result["comparisons"]["amount"]["status"] != "match"

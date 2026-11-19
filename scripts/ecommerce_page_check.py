@@ -29,9 +29,10 @@ _AVAILABILITY = {
     "BackOrder": ("backorder", "back-order", "back order"),
 }
 _NEGATED_AVAILABILITY = re.compile(
-    r"\bnot\s+(?:(?:currently|yet)\s+)?(?:in stock|available(?: now| to order)?|"
-    r"out of stock|sold out|unavailable)\b"
+    r"\b(?:no\s+longer\s+|not\s+(?:(?:currently|yet)\s+)?)"
+    r"(?:in stock|available(?: now| to order)?|out of stock|sold out|unavailable)\b"
 )
+_PLACEHOLDER_VARIANT = re.compile(r"^(?:choose|select|please select)(?:\s+(?:a|an|your))?\b", re.I)
 
 
 def _visible(element) -> bool:
@@ -83,7 +84,9 @@ def _visible_facts(html: str) -> dict:
         if not text:
             continue
         if "price" in props:
-            numeric = re.findall(r"(?<!\d)\d+(?:[.,]\d{1,2})?(?!\d)", text)
+            # Commas are locale-dependent (decimal or grouping separator), so
+            # leave them unresolved rather than manufacturing another amount.
+            numeric = re.findall(r"(?<![\d,.])\d+(?:\.\d{1,2})?(?![\d,.])", text)
             if len(numeric) == 1:
                 prices.append(numeric[0].replace(",", ""))
         if "pricecurrency" in props:
@@ -93,9 +96,9 @@ def _visible_facts(html: str) -> dict:
 
     for option in soup.select("select option[selected]"):
         if _visible(option):
-            selected = str(option.get("value", "")).strip()
-            if selected:
-                skus.append(selected)
+            selected_label = option.get_text(" ", strip=True)
+            if selected_label and not _PLACEHOLDER_VARIANT.match(selected_label):
+                skus.append(selected_label)
     selected_variant = _one(skus)
 
     availability_value = None
@@ -210,7 +213,10 @@ def check_page(html: str, page_url: str = "") -> dict:
     identity = visible["identity"]["value"] if visible["identity"]["status"] == "available" else None
     candidates = products
     if selected:
-        matched = [p for p in products if selected in {str(p.get("sku", "")), str(p.get("productID", ""))}]
+        matched = [p for p in products if selected.casefold() in {
+            str(p.get("sku", "")).strip().casefold(), str(p.get("productID", "")).strip().casefold(),
+            str(p.get("name", "")).strip().casefold(),
+        }]
         if matched:
             candidates = matched
         else:
@@ -241,6 +247,8 @@ def check_page(html: str, page_url: str = "") -> dict:
             if isinstance(raw_variant, str) and raw_variant.strip():
                 schema_variant = raw_variant.strip()
                 break
+        if isinstance(candidates[0].get("name"), str) and candidates[0]["name"].strip().casefold() == str(selected or "").strip().casefold():
+            schema_variant = candidates[0]["name"].strip()
 
     comparisons = {}
     schema_for = {"identity": schema_identity, "selected_variant": schema_variant, **schema_values}
