@@ -1,0 +1,6 @@
+interface:
+  display_name: "SEO"
+  short_description: "Run evidence-backed SEO audits"
+  default_prompt: "Use $seo to audit this website and produce a prioritized, evidence-backed action plan."
+policy:
+  allow_implicit_invocation: true
