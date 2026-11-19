@@ -1,6 +1,6 @@
 # DataForSEO Account Setup
 
-Step-by-step guide to getting DataForSEO API credentials for the Claude SEO extension.
+Step-by-step guide to getting DataForSEO API credentials for the Codex SEO extension.
 
 ## 1. Create Account
 
@@ -18,7 +18,7 @@ New accounts include a free trial balance for testing.
    - **Username**: Your registered email address
    - **Password**: Your API password (set during registration)
 
-These are the values you'll enter when running the extension installer.
+Set these as `DATAFORSEO_USERNAME` and `DATAFORSEO_PASSWORD` in the environment that starts Codex.
 
 ## 3. Understanding Credits
 
@@ -40,35 +40,35 @@ DataForSEO uses a credit-based system:
 | On-page crawl (per page) | $0.01-0.05 |
 | AI optimization (per call) | $0.05 |
 
-## 4. Manual MCP Configuration
+## Install
 
-If the installer's auto-configuration fails, add this to `~/.claude.json`:
+From the Codex SEO checkout with its [managed runtime](../../../docs/INSTALLATION.md) set up:
 
-```json
-{
-  "mcpServers": {
-    "dataforseo": {
-      "command": "npx",
-      "args": ["-y", "dataforseo-mcp-server@2.8.10"],
-      "env": {
-        "DATAFORSEO_USERNAME": "<account-username>",
-        "DATAFORSEO_PASSWORD": "your-api-password",
-        "ENABLED_MODULES": "SERP,KEYWORDS_DATA,ONPAGE,DATAFORSEO_LABS,BACKLINKS,DOMAIN_ANALYTICS,BUSINESS_DATA,CONTENT_ANALYSIS,AI_OPTIMIZATION",
-        "FIELD_CONFIG_PATH": "/path/to/dataforseo-field-config.json"
-      }
-    }
-  }
-}
+```text
+./extensions/dataforseo/install.sh
+# Windows PowerShell (Git Bash must be on PATH)
+.\extensions\dataforseo\install.ps1
 ```
 
-Replace the username, password, and FIELD_CONFIG_PATH with your actual values.
+This registers the optional checkout skill under `.agents/skills/`. Open a new Codex session to discover it.
 
-## 5. Verify Installation
+Install Node.js 20+ and use the credentials from your account. Set the field configuration path to the absolute path to `extensions/dataforseo/field-config.json` in your checkout.
 
-After installing, start Claude Code and run:
+Add this entry to your user `~/.codex/config.toml`. Set the named credentials in the environment that starts Codex. See [MCP and provider setup](../../../docs/MCP-INTEGRATION.md).
 
+```toml
+[mcp_servers.dataforseo]
+command = "npx"
+args = ["-y", "dataforseo-mcp-server@2.8.10"]
+env_vars = ["DATAFORSEO_USERNAME", "DATAFORSEO_PASSWORD"]
+
+[mcp_servers.dataforseo.env]
+ENABLED_MODULES = "SERP,KEYWORDS_DATA,ONPAGE,DATAFORSEO_LABS,BACKLINKS,DOMAIN_ANALYTICS,BUSINESS_DATA,CONTENT_ANALYSIS,AI_OPTIMIZATION"
+FIELD_CONFIG_PATH = "/absolute/path/to/codex-seo/extensions/dataforseo/field-config.json"
 ```
-/seo dataforseo serp test query
-```
 
-If you see search results, the extension is working correctly.
+Verify registration with `codex mcp list`.
+
+## Verify installation
+
+Use `codex mcp list` and confirm the tools are available in a new Codex session. Check your usage limits before approving a live query.

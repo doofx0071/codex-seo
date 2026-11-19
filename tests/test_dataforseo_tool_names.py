@@ -5,7 +5,7 @@ by dataforseo-mcp-server@2.8.10 (each tool's getName() in the npm package,
 extracted 2026-09-23). Skills that named tools the server does not have
 (serp_google_images_live_advanced, dataforseo_backlinks_*, and
 on_page_content_parsing_live) sent the model after tools that never exist.
-Bump the fixture together with the installer pin.
+Bump the fixture together with the setup guide pin.
 """
 
 from __future__ import annotations
@@ -28,9 +28,9 @@ def _tools() -> set[str]:
     return set(FIXTURE.read_text(encoding="utf-8").split())
 
 
-def test_fixture_matches_the_installer_pin() -> None:
-    for rel in ("extensions/dataforseo/install.sh", "extensions/dataforseo/install.ps1"):
-        assert PINNED in (ROOT / rel).read_text(encoding="utf-8"), rel
+def test_fixture_matches_the_setup_guide_pin() -> None:
+    guide = ROOT / "extensions/dataforseo/docs/DATAFORSEO-SETUP.md"
+    assert PINNED in guide.read_text(encoding="utf-8")
     assert len(_tools()) == 80
 
 

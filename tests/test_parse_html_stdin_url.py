@@ -1,7 +1,7 @@
 """parse_html --url must not wait on a stdin nobody writes to (issue #459).
 
 ``main()`` used to call ``sys.stdin.read()`` before it looked at ``--url``.
-When stdin is open but silent (a socket in the Claude desktop app, a
+When stdin is open but silent (a socket in a desktop app, a
 terminal) that read never returns. With ``--url`` and no file, stdin is now
 read only when it is a pipe or a regular file; anything else goes straight
 to the fetch. A positional argument that looks like a URL gets an error that

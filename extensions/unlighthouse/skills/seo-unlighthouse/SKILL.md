@@ -3,7 +3,7 @@ name: seo-unlighthouse
 description: Multi-page Lighthouse audit via the MIT-licensed Unlighthouse CLI. Free-tier alternative to running PageSpeed against every URL on a site, no API quota burn, runs locally.
 metadata:
   version: "2.6.2"
-compatibility: "Requires Node 18+ and the unlighthouse npm package. Run extensions/unlighthouse/install.sh to pre-warm."
+compatibility: "Requires Node.js 18+, npx, and the managed Chromium runtime."
 ---
 
 # seo-unlighthouse
@@ -17,18 +17,18 @@ and aggregate the results. Useful when:
 
 ## Prerequisites
 
-- Run `extensions/unlighthouse/install.sh` (no API key needed).
+- Configure the local runtime and Node.js using the [setup guide](../../docs/UNLIGHTHOUSE-SETUP.md).
 - Node 18+ on `$PATH`.
 
 ## Routing
 
 | Command | Effect |
 |---|---|
-| `/seo unlighthouse <url>` | Mobile audit, up to 200 routes, JSON+HTML report in a temp dir |
-| `/seo unlighthouse <url> --device desktop` | Desktop form factor |
-| `/seo unlighthouse <url> --max-routes 50 --output-dir ./reports` | Cap + persist |
+| `$seo unlighthouse <url>` | Mobile audit, up to 200 routes, JSON+HTML report in a temp dir |
+| `$seo unlighthouse <url> --device desktop` | Desktop form factor |
+| `$seo unlighthouse <url> --max-routes 50 --output-dir ./reports` | Cap + persist |
 
-All flags forward through `"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run unlighthouse_run.py`, which handles
+All flags forward through `./scripts/codex-seo run unlighthouse_run.py`, which handles
 url_safety pre-flight and subprocess timeout management.
 
 ## Output handling
@@ -53,7 +53,7 @@ from the overall `--timeout` subprocess guard (default 600s).
 
 - For single-URL field data (CrUX), use `seo-google psi` / `seo-google crux`.
 - For LCP subpart decomposition on slow pages, use the
-  `"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run lcp_subparts.py` workflow (Phase C).
+  `./scripts/codex-seo run lcp_subparts.py` workflow (Phase C).
 
 ## Security
 

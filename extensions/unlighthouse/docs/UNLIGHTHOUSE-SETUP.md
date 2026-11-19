@@ -6,23 +6,22 @@ quota, no credentials, no network egress beyond crawling the target.
 
 ## Install
 
-```bash
+From the Codex SEO checkout with its [managed runtime](../../../docs/INSTALLATION.md) set up:
+
+```text
 ./extensions/unlighthouse/install.sh
+# Windows PowerShell (Git Bash must be on PATH)
 .\extensions\unlighthouse\install.ps1
 ```
 
-The installer:
+This registers the optional checkout skill under `.agents/skills/`. Open a new Codex session to discover it.
 
-1. Verifies Python 3 + Node 18+.
-2. Pre-warms `unlighthouse@0.13.5` via `npx --yes`.
-3. Copies the `seo-unlighthouse` skill into `~/.claude/skills/`.
-
-No API keys, no settings.json mutation.
+Install Node.js 18+ and make `npx` available. Set up Playwright Chromium through the checkout launcher. The audit runs `unlighthouse@0.13.5` with the checkout's browser egress guard. It may download the package on first use.
 
 ## Verify
 
 ```
-/seo unlighthouse https://example.com --max-routes 5
+$seo unlighthouse https://example.com --max-routes 5
 ```
 
 ## When to use Unlighthouse vs. PageSpeed Insights
@@ -40,6 +39,4 @@ on production traffic, prefer PSI / CrUX.
 
 ## Uninstall
 
-```bash
-./extensions/unlighthouse/uninstall.sh
-```
+Run `./extensions/unlighthouse/uninstall.sh` to remove the checkout skill entry.

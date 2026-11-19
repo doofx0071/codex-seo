@@ -5,53 +5,46 @@
 1. Go to [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
 2. Sign in with your Google account
 3. Click "Create API key"
-4. Copy the key. You'll need it during installation
+4. Store the key securely for the environment that launches Codex
 
 **Free tier limits:**
 - Check current limits in Google AI Studio before batch work
 
-## MCP Server Configuration
+## Install
 
-The installer configures this automatically. If you need to set it up manually,
-add to `~/.claude.json`:
+From the Codex SEO checkout with its [managed runtime](../../../docs/INSTALLATION.md) set up:
 
-```json
-{
-  "mcpServers": {
-    "nanobanana-mcp": {
-      "command": "npx",
-      "args": ["-y", "@ycse/nanobanana-mcp@1.1.1"],
-      "env": {
-        "GOOGLE_AI_API_KEY": "your-api-key-here"
-      }
-    }
-  }
-}
+```text
+./extensions/banana/install.sh
 ```
 
-Scripted setup helper:
-```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run --extension banana setup_mcp.py --key YOUR_KEY
+This registers the optional checkout skill under `.agents/skills/`. Open a new Codex session to discover it.
+
+Install Node.js 20+ and set `GOOGLE_AI_API_KEY` from your Google AI account. Add this entry to your user `~/.codex/config.toml`. Set the named credentials in the environment that starts Codex. See [MCP and provider setup](../../../docs/MCP-INTEGRATION.md).
+
+```toml
+[mcp_servers.nanobanana-mcp]
+command = "npx"
+args = ["-y", "@ycse/nanobanana-mcp@1.1.1"]
+env_vars = ["GOOGLE_AI_API_KEY", "NANOBANANA_MODEL"]
 ```
+
+Verify registration with `codex mcp list`.
 
 ## Verifying Installation
 
-Run the validation script:
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run --extension banana validate_setup.py
+./scripts/codex-seo run --extension banana validate_setup.py
 ```
 
-Or check manually:
-1. `ls ~/.claude/skills/seo-image-gen/SKILL.md`:skill file exists
-2. `ls ~/.claude/agents/seo-image-gen.md`:agent file exists
-3. `grep nanobanana ~/.claude.json`:MCP configured
+Confirm `nanobanana-mcp` is connected in Codex. Both checks can run without generating images. Ask for an estimate before approving generation.
 
 ## Common Issues
 
 ### "MCP tools not available"
-- Restart Claude Code after installing the extension
+- Restart Codex after installing the extension
 - Verify your API key is valid at [aistudio.google.com](https://aistudio.google.com)
-- Check `~/.claude.json` has the nanobanana-mcp entry
+- Check `codex mcp list` shows the nanobanana-mcp entry
 
 ### "Rate limited (429)"
 - Check current free-tier limits in Google AI Studio
@@ -60,7 +53,7 @@ Or check manually:
 
 ### "IMAGE_SAFETY" error
 - The safety filter flagged your prompt (often a false positive)
-- Claude will suggest rephrased alternatives automatically
+- Codex will suggest rephrased alternatives automatically
 - Common triggers: certain color descriptions, implied scenarios
 - See `references/prompt-adaptation-safety.md` (Safety Filter Rephrase Strategies)
 
@@ -71,7 +64,7 @@ Or check manually:
 
 ### Generated images not appearing
 - Default output directory: `~/Documents/nanobanana_generated/`
-- Check the path returned by Claude after generation
+- Check the path returned by Codex after generation
 - Verify disk space is available
 
 ## ImageMagick (Optional)

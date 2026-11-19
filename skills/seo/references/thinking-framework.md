@@ -1,6 +1,6 @@
 # The 10-Principle Audit Synthesis Framework
 
-This is the canonical methodology claude-seo uses to assemble raw findings
+This is the canonical methodology codex-seo uses to assemble raw findings
 into strategically coherent recommendations. Every full-site audit and
 deep-page analysis walks through these ten principles before producing the
 final action plan.
@@ -25,12 +25,12 @@ not a recommendation.
 
 Collect signals without interpreting them. For a website audit this means:
 
-- Raw HTML + rendered HTML (via `"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run render_page.py`)
+- Raw HTML + rendered HTML (via `./scripts/codex-seo run render_page.py`)
 - Schema.org markup actually present (via `seo-schema`)
 - SERP visibility for the site's published topics (via `seo-dataforseo` /
   Google APIs when available)
 - Backlink + brand-mention landscape (via `seo-backlinks`)
-- Core Web Vitals field data from CrUX (via `"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run pagespeed_check.py`)
+- Core Web Vitals field data from CrUX (via `./scripts/codex-seo run pagespeed_check.py`)
 - AI-search citation patterns (via `seo-geo`)
 - Competitor pages on the target's primary keywords
 
@@ -94,7 +94,7 @@ Reduce the findings to first principles:
   missing canonical) that gates everything else.)
 - What does **Google's primary-source guidance** say about the
   recommendation? When community claims and Google contradict, defer
-  to Google (see `${CLAUDE_PLUGIN_ROOT}/skills/seo-geo/references/google-ai-optimization-guide.md`).
+  to Google (see `skills/seo-geo/references/google-ai-optimization-guide.md`).
 
 **Discipline:** the highest-leverage constraint goes first in the action
 plan, even if it's less interesting than the "growth" recommendations.
@@ -136,12 +136,12 @@ two recommendations cannot be done in either order, say so.
 
 ## How to invoke the framework
 
-Every full-site audit (`/seo audit`) and deep-page audit (`/seo page`)
+Every full-site audit (`$seo audit`) and deep-page audit (`$seo page`)
 walks through PERCEIVE → ANALYZE → VALIDATE → ACT before emitting the
 action plan. The Critical / High / Medium / Low priority bucketing
 happens **after** the validation phase, not instead of it.
 
-Single-purpose commands (`/seo schema`, `/seo images`, `/seo technical`,
+Single-purpose commands (`$seo schema`, `$seo images`, `$seo technical`,
 etc.) can skip the full loop when the user is asking a narrow question, but
 their recommendations should still pass at least THINK + ACCEPT before being
 emitted (does this rest on a sound first principle, and is the falsifiability
@@ -149,7 +149,7 @@ surfaced?).
 
 ## When to escalate to the user
 
-These principles are claude-seo's; they are not the user's. Surface them
+These principles are codex-seo's; they are not the user's. Surface them
 for the user when:
 
 - A recommendation requires accepting an assumption you'd rather not own

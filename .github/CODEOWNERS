@@ -1,33 +1,31 @@
-# CODEOWNERS for claude-seo
+# CODEOWNERS for Codex SEO
 #
-# Every change to this repository routes review to @AgriciDaniel.
+# Every change to this repository routes review to @helx0071.
 # Sections below let us call out security-critical paths so a future
 # co-maintainer cannot accidentally land a change without the right
 # eyes on it.
 
 # Default owner — every file unless overridden below.
-*                                   @AgriciDaniel
+*                                   @helx0071
 
 # Security-critical: SSRF + DNS rebinding + credential handling.
-scripts/url_safety.py               @AgriciDaniel
-scripts/google_auth.py              @AgriciDaniel
-scripts/backlinks_auth.py           @AgriciDaniel
-scripts/render_page.py              @AgriciDaniel
-scripts/fetch_page.py               @AgriciDaniel
-scripts/capture_screenshot.py       @AgriciDaniel
-tests/test_url_safety.py            @AgriciDaniel
-SECURITY.md                         @AgriciDaniel
+scripts/url_safety.py               @helx0071
+scripts/google_auth.py              @helx0071
+scripts/backlinks_auth.py           @helx0071
+scripts/render_page.py              @helx0071
+scripts/fetch_page.py               @helx0071
+scripts/capture_screenshot.py       @helx0071
+tests/test_url_safety.py            @helx0071
+SECURITY.md                         @helx0071
 
 # Release + distribution: install scripts and version pinning are the
 # supply-chain surface.
-install.sh                          @AgriciDaniel
-install.ps1                         @AgriciDaniel
-.claude-plugin/plugin.json          @AgriciDaniel
-.claude-plugin/marketplace.json     @AgriciDaniel
-requirements.txt                    @AgriciDaniel
-pyproject.toml                      @AgriciDaniel
-CITATION.cff                        @AgriciDaniel
+scripts/codex-seo                   @helx0071
+plugins/                            @helx0071
+requirements.txt                    @helx0071
+pyproject.toml                      @helx0071
+CITATION.cff                        @helx0071
 
 # CI / governance.
-.github/                            @AgriciDaniel
-tests/test_manifest_consistency.py  @AgriciDaniel
+.github/                            @helx0071
+tests/test_manifest_consistency.py  @helx0071

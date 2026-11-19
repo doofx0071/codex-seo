@@ -2,17 +2,14 @@
 """
 Cross-platform portability lint for SKILL.md files.
 
-claude-seo skills run under Claude Code, but also Cursor / Cursor Cloud
-Agents / Google Antigravity / Gemini CLI / OpenAI Codex CLI / Cline /
-Aider. Most harnesses share a minimum frontmatter contract:
+Codex SEO source guides share a minimum frontmatter contract:
 
   - ``name``        (string, kebab-case, < 64 chars)
   - ``description`` (string, < 1024 chars, ends with a period or noun phrase)
 
-Claude-Code-specific fields are tolerated by other harnesses (they are
-ignored, not rejected):
+Optional source-guide metadata includes:
 
-  - ``model``        (e.g. sonnet, haiku, opus)
+  - ``model``        (legacy source guide value)
   - ``maxTurns``     (int)
   - ``tools``        (comma-separated list with optional inline comments)
   - ``compatibility`` (free text, e.g. "Requires the @ahrefs/mcp MCP server")
@@ -23,9 +20,7 @@ and reports portability findings. Severity:
 
   - ``error``: a harness will outright reject the file (missing required
               field, malformed YAML, name not kebab-case).
-  - ``warning``: the file works but loses information in a non-Claude
-              harness (e.g. tools list with inline comments may be
-              parsed differently).
+  - ``warning``: the file works but contains ambiguous metadata.
   - ``info``: noteworthy but harmless (e.g. very long description).
 
 Exit code 0 if no errors; 1 otherwise. Warnings + info do not fail the
@@ -158,27 +153,25 @@ def check_one(path: Path) -> list[dict]:
                        "above 2048)",
         })
 
-    # tools is optional. If present, Cline and Codex parse the list more
-    # strictly than Claude Code: warn if there are inline comments
-    # (e.g., "Read, Bash # for analyse").
+    # Inline comments in a tools list may be read as part of a tool name.
     tools = frontmatter.get("tools", "")
     if tools and "#" in tools:
         findings.append({
             "severity": "warning", "path": relpath,
             "rule": "tools-has-inline-comment",
-            "message": "Cline + Codex may include the comment in the "
+            "message": "A parser may include the comment in the "
                        "tool name. Move comments below the frontmatter.",
         })
 
     # metadata.version is referenced by the consistency tests but is
-    # purely informational for non-Claude harnesses.
+    # informational in the source guides.
     if frontmatter.get("metadata", ""):
         if 'version' not in frontmatter["metadata"]:
             findings.append({
                 "severity": "info", "path": relpath,
                 "rule": "metadata-without-version",
                 "message": "metadata block present but no version field; "
-                           "claude-seo's manifest test expects "
+                           "codex-seo's manifest test expects "
                            "metadata.version on every skill",
             })
 
@@ -187,7 +180,7 @@ def check_one(path: Path) -> list[dict]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Cross-platform portability lint for claude-seo SKILL.md files."
+        description="Cross-platform portability lint for codex-seo SKILL.md files."
     )
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--strict", action="store_true",

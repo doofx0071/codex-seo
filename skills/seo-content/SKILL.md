@@ -36,7 +36,7 @@ merged into core during the March 2024 update).
 
 ## E-E-A-T Framework (updated Sept 2025 QRG)
 
-Read `${CLAUDE_PLUGIN_ROOT}/skills/seo/references/eeat-framework.md` for full criteria and `${CLAUDE_PLUGIN_ROOT}/skills/seo/references/eeat-scoring-guide.md` for score bands.
+Read `skills/seo/references/eeat-framework.md` for full criteria and `skills/seo/references/eeat-scoring-guide.md` for score bands.
 
 ### Experience (first-hand signals)
 - Original research, case studies, before/after results
@@ -135,7 +135,7 @@ Google's raters assess low-quality, scaled, copied, or AI-generated main content
 
 > **Gen-AI optimization is SEO (Google docs, published 2026-05-15, last updated 2026-07-10):** the official "optimizing for generative AI features" guide states you do **not** need new AI files, markup, Markdown, content chunking, or AI-specific rewrites; chasing inauthentic "mentions" is unhelpful. AEO/GEO is rebranded SEO rooted in core ranking/quality.
 
-> **Honest scoping (Google docs, 2026-06-05):** per "Using third-party SEO tools, services, and advice," no tool guarantees rankings and third-party tools have no access to Google's internal ranking data. claude-seo's scores are **heuristics**, not Google-internal signals, so say so in reports, and validate GEO/AEO findings against Google's official guidance (Search Console is the first-party source).
+> **Honest scoping (Google docs, 2026-06-05):** per "Using third-party SEO tools, services, and advice," no tool guarantees rankings and third-party tools have no access to Google's internal ranking data. codex-seo's scores are **heuristics**, not Google-internal signals, so say so in reports, and validate GEO/AEO findings against Google's official guidance (Search Console is the first-party source).
 
 ## Draft Cleanup: AI Phrasing & Invisible Watermarks
 
@@ -143,8 +143,8 @@ For "humanize this", "remove watermarks", or "clean up this draft", run the
 bundled cleanup script on the user's own content:
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run content_humanize.py draft.md -o cleaned.md
-cat draft.md | "${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run content_humanize.py --json
+./scripts/codex-seo run content_humanize.py draft.md -o cleaned.md
+cat draft.md | ./scripts/codex-seo run content_humanize.py --json
 ```
 
 Two deterministic passes, both logged in the JSON output:
@@ -165,7 +165,7 @@ decline requests to strip provenance from content the user doesn't own.
 
 ## Hidden Text
 
-`"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run parse_html.py --url <url> --json` returns
+`./scripts/codex-seo run parse_html.py --url <url> --json` returns
 `hidden_text`: characters that are in the HTML but hidden by an attribute or an
 inline style. Report a high `chars` count outside `collapsed_chars` (FAQ,
 accordion and tab content, which is legitimately collapsed) as a hidden-text
@@ -197,7 +197,7 @@ Optimize for AI search engines (ChatGPT, Perplexity, Google AI Overviews):
 - **Multi-platform tracking:** Monitor visibility across Google AI Overviews, AI Mode, ChatGPT, Perplexity, and Bing Copilot, not just traditional rankings. Treat AI citation as a standalone KPI alongside organic rankings and traffic.
 
 **Generative Engine Optimization (GEO):**
-Per Google's AI optimization guide, "optimizing for generative AI search is optimizing for the search experience, and thus still SEO": AI Overviews and AI Mode are grounded in the same ranking and quality systems as classic Search. The optimization signals that matter (quotability, attribution, heading hierarchy, freshness) are SEO fundamentals applied to AI-search surfaces, not a separate discipline. Cross-reference the `seo-geo` skill for detailed workflows; both surfaces share the primary-source synthesis in `${CLAUDE_PLUGIN_ROOT}/skills/seo-geo/references/google-ai-optimization-guide.md`.
+Per Google's AI optimization guide, "optimizing for generative AI search is optimizing for the search experience, and thus still SEO": AI Overviews and AI Mode are grounded in the same ranking and quality systems as classic Search. The optimization signals that matter (quotability, attribution, heading hierarchy, freshness) are SEO fundamentals applied to AI-search surfaces, not a separate discipline. Cross-reference the `seo-geo` skill for detailed workflows; both surfaces share the primary-source synthesis in `skills/seo-geo/references/google-ai-optimization-guide.md`.
 
 ## Content Freshness
 
@@ -211,7 +211,7 @@ Before attributing a traffic or ranking change to anything, list the confirmed
 Google updates in that window from the primary-source ledger:
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run seo_updates.py --since <yyyy-mm> --limit 0 --json
+./scripts/codex-seo run seo_updates.py --since <yyyy-mm> --limit 0 --json
 ```
 
 `--limit 0` lists every match; without it only the 10 newest are returned and
@@ -258,7 +258,7 @@ If DataForSEO MCP tools are available, use `kw_data_google_ads_search_volume` fo
 
 ## FLOW Framework Integration
 
-For prompt-guided content optimization, use `/seo flow optimize <url>` and `/seo flow win <url>`: FLOW's optimize and win prompts provide structured E-E-A-T improvement and BOFU conversion workflows.
+For prompt-guided content optimization, use `$seo flow optimize <url>` and `$seo flow win <url>`: FLOW's optimize and win prompts provide structured E-E-A-T improvement and BOFU conversion workflows.
 
 ## Security
 

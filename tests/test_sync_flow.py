@@ -17,8 +17,8 @@ REF_DIR = REPO_ROOT / "skills" / "seo-flow" / "references"
 # and 403 rate limits, so these tests only run when explicitly enabled; CI sets
 # the flag together with GH_TOKEN.
 network = pytest.mark.skipif(
-    os.environ.get("CLAUDE_SEO_NETWORK_TESTS") != "1",
-    reason="live GitHub API call; set CLAUDE_SEO_NETWORK_TESTS=1 to run",
+    os.environ.get("CODEX_SEO_NETWORK_TESTS") != "1",
+    reason="live GitHub API call; set CODEX_SEO_NETWORK_TESTS=1 to run",
 )
 
 # sync_flow.py's own markers for "GitHub or the network said no". Kept as
@@ -119,18 +119,13 @@ def test_synced_files_have_attribution_headers():
 
 # ── Task 1 tests ──────────────────────────────────────────────────────────────
 
-def test_agent_tools_does_not_include_bash():
-    """agents/seo-flow.md must not grant Bash to the agent (VULN-A01)."""
+def test_agent_role_instructions_avoid_shell_commands():
+    """The FLOW role prompt asks the agent not to run shell commands."""
     agent_file = REPO_ROOT / "agents" / "seo-flow.md"
     content = agent_file.read_text(encoding="utf-8")
-    tools_line = next(
-        (line for line in content.splitlines() if line.startswith("tools:")),
-        ""
-    )
-    assert "Bash" not in tools_line, (
-        f"Bash found in tools grant: {tools_line!r}\n"
-        "Remove 'Bash' from the tools line in agents/seo-flow.md"
-    )
+    frontmatter = content.split("---", 2)[1]
+    assert not any(line.startswith("tools:") for line in frontmatter.splitlines())
+    assert "Do not run shell commands for this analysis." in content
 
 
 def test_agent_has_untrusted_webfetch_rule():

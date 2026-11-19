@@ -1,7 +1,6 @@
 """Unlighthouse extension regressions (issue #189).
 
-Three confirmed bugs in scripts/unlighthouse_run.py and
-extensions/unlighthouse/install.sh:
+Two confirmed bugs in scripts/unlighthouse_run.py:
 
 (a) ``--max-routes`` was forwarded as ``--scanner '{"maxRoutes": N}'``, a
     made-up CLI flag unlighthouse-ci's cac-based parser never reads
@@ -12,9 +11,6 @@ extensions/unlighthouse/install.sh:
 (b) ``ci-result.json`` was parsed assuming a dict; the default
     ``jsonSimple`` reporter (used whenever ``--reporter`` isn't passed)
     writes a flat JSON array of per-route results instead.
-(c) install.sh required ``~/.claude/skills/seo`` to exist, which is never
-    true for a marketplace/plugin install, so the installer always
-    aborted in that path.
 
 These tests exercise the pure argument-builder and JSON-normalization
 functions directly with fixture data: no network, no unlighthouse install,
@@ -92,7 +88,7 @@ def test_preload_guards_node_http_and_https_requests():
         "https.request = guardedHttps",
         "http.get =",
         "https.get =",
-        "new URL(process.env.CLAUDE_SEO_GUARD_PROXY)",
+        "new URL(process.env.CODEX_SEO_GUARD_PROXY)",
         "CONNECT ${authority}",
     ):
         assert needle in text
@@ -108,7 +104,7 @@ def test_run_keeps_guard_active_during_unlighthouse_process(monkeypatch, tmp_pat
         proxy_flag = next(arg for arg in config["puppeteerOptions"]["args"]
                           if arg.startswith("--proxy-server="))
         proxy = urlsplit(proxy_flag.removeprefix("--proxy-server="))
-        assert kwargs["env"]["CLAUDE_SEO_GUARD_PROXY"] == proxy.geturl()
+        assert kwargs["env"]["CODEX_SEO_GUARD_PROXY"] == proxy.geturl()
         assert "unlighthouse_http_proxy.cjs" in kwargs["env"]["NODE_OPTIONS"]
         with socket.create_connection((proxy.hostname, proxy.port), timeout=3) as client:
             client.sendall(b"GET http://127.0.0.1:9999/ HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n")
@@ -162,7 +158,7 @@ def test_node_preflight_redirect_cannot_reach_internal_server(monkeypatch):
     monkeypatch.setattr(browser_proxy, "_destination", mapped_destination)
     driver = """
       process.argv[1] = 'C:/test/unlighthouse-ci.cjs';
-      require(process.env.CLAUDE_SEO_PRELOAD);
+      require(process.env.CODEX_SEO_PRELOAD);
       const http = require('node:http');
       function get(url) {
         http.get(url, response => {
@@ -171,15 +167,15 @@ def test_node_preflight_redirect_cannot_reach_internal_server(monkeypatch):
           else { console.log(response.statusCode); process.exit(0); }
         }).on('error', error => { console.error(error); process.exit(1); });
       }
-      get(process.env.CLAUDE_SEO_TEST_URL);
+      get(process.env.CODEX_SEO_TEST_URL);
     """
     try:
         with browser_proxy.guarded_proxy() as proxy:
             env = os.environ.copy()
             env.update({
-                "CLAUDE_SEO_GUARD_PROXY": proxy,
-                "CLAUDE_SEO_PRELOAD": str(ROOT / "scripts" / "unlighthouse_http_proxy.cjs"),
-                "CLAUDE_SEO_TEST_URL": f"http://public-egress.example:{public.server_port}/",
+                "CODEX_SEO_GUARD_PROXY": proxy,
+                "CODEX_SEO_PRELOAD": str(ROOT / "scripts" / "unlighthouse_http_proxy.cjs"),
+                "CODEX_SEO_TEST_URL": f"http://public-egress.example:{public.server_port}/",
             })
             proc = subprocess.run([ul.shutil.which("node"), "-e", driver], env=env,
                                   capture_output=True, text=True, timeout=15, check=False)
@@ -287,16 +283,3 @@ def test_normalize_tolerates_garbage_input():
     assert ul.normalize_ci_result([1, 2, "not-a-dict"]) == {
         "routes": [], "route_count": 0, "aggregate_scores": {},
     }
-
-
-# --------------------------------------------------------------------------
-# (c) installer no longer hard-requires the manual skill directory
-# --------------------------------------------------------------------------
-
-
-def test_installer_detects_plugin_install_paths():
-    text = (ROOT / "extensions" / "unlighthouse" / "install.sh").read_text(encoding="utf-8")
-    assert "CLAUDE_PLUGIN_ROOT" in text
-    assert "plugins/cache" in text
-    # The old unconditional abort before any plugin-path check is gone.
-    assert '[ ! -d "${SKILL_DIR}/seo" ] && { echo "✗ claude-seo base not installed."; exit 1; }' not in text

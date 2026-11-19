@@ -1,69 +1,59 @@
 # Ahrefs extension setup
 
 Wires the official [`@ahrefs/mcp@0.0.11`](https://www.npmjs.com/package/@ahrefs/mcp)
-server into your Claude Code session so the `seo-ahrefs` skill can call
+server into your Codex session so the `seo-ahrefs` skill can call
 live Ahrefs data.
 
 ## Install
 
-```bash
-./extensions/ahrefs/install.sh        # Linux / macOS
-.\extensions\ahrefs\install.ps1       # Windows PowerShell
+From the Codex SEO checkout with its [managed runtime](../../../docs/INSTALLATION.md) set up:
+
+```text
+./extensions/ahrefs/install.sh
+# Windows PowerShell (Git Bash must be on PATH)
+.\extensions\ahrefs\install.ps1
 ```
 
-The installer:
+This registers the optional checkout skill under `.agents/skills/`. Open a new Codex session to discover it.
 
-1. Verifies Node 18+ is on `$PATH` (the `.sh` installer also verifies Python 3,
-   used only for its `~/.claude.json` merge script; the `.ps1` installer
-   merges natively with `ConvertTo-Json` and needs no Python).
-2. Prompts for your Ahrefs API token (input is hidden).
-3. Pre-warms the `@ahrefs/mcp@0.0.11` npm package via `npx --yes` so the first
-   MCP call doesn't spend 10+ seconds downloading.
-4. Copies `skills/seo-ahrefs/SKILL.md` into `~/.claude/skills/seo-ahrefs/`.
-5. Atomically writes `mcpServers.ahrefs` into `~/.claude.json`
-   with your token in the `env` block. The settings file is `chmod 0o600`
-   after the merge (same hardening as the OAuth token).
+Install Node.js 18+ and obtain an Ahrefs API token. Add this entry to your user `~/.codex/config.toml`. Set the named credentials in the environment that starts Codex. See [MCP and provider setup](../../../docs/MCP-INTEGRATION.md).
+
+```toml
+[mcp_servers.ahrefs]
+command = "npx"
+args = ["--yes", "--package=@ahrefs/mcp@0.0.11", "mcp"]
+env_vars = ["AHREFS_API_TOKEN"]
+```
+
+Verify registration with `codex mcp list`.
 
 ## Verify
 
-Open a new Claude Code session and ask:
+Open a new Codex session and ask:
 
 ```
-/seo ahrefs metrics https://example.com
+$seo ahrefs metrics https://example.com
 ```
 
-If you see "Ahrefs MCP not connected", the npm package is not yet cached.
-Re-run the installer to pre-warm or run `npx --yes --package=@ahrefs/mcp@0.0.11 mcp --help` manually.
+If Ahrefs MCP is unavailable, check `codex mcp list` and confirm Codex inherited `AHREFS_API_TOKEN`. Make sure Node.js and `npx` are available in that environment. The first server start may need network access to download the pinned package.
 
 ## Rotate token
 
-```bash
-./extensions/ahrefs/install.sh   # re-runs the prompt; overwrites the env entry
-```
-
-The Python merge script is idempotent: re-running only replaces the
-`mcpServers.ahrefs.env.AHREFS_API_TOKEN` value, leaving the rest of
-`~/.claude.json` intact.
+Replace `AHREFS_API_TOKEN` in your local environment and start a new Codex session.
 
 ## Uninstall
 
-```bash
-./extensions/ahrefs/uninstall.sh    # removes the skill + clears the MCP entry
-```
+Run `./extensions/ahrefs/uninstall.sh` to remove the checkout skill entry. Remove your server registration with `codex mcp remove ahrefs`. Remove `AHREFS_API_TOKEN` from the environment you configured.
 
 ## Cost model
 
 Ahrefs charges per "unit". A unit covers most read endpoints (domain
 metrics, backlink data) at 1 unit each; bulk endpoints cost more. The
-`"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run dataforseo_costs.py` cost tracker shipped with claude-seo
+`./scripts/codex-seo run dataforseo_costs.py` cost tracker shipped with codex-seo
 generalises across vendors; see the DataForSEO extension's
 `references/cost-tiers.md` for the budget-preset pattern to mirror when
 wiring Ahrefs accounting.
 
 ## Troubleshooting
 
-| Symptom | Cause | Fix |
-|---|---|---|
-| `Error: AHREFS_API_TOKEN is empty` | Installer didn't capture input | Re-run installer; type token at the prompt, then press Enter |
-| `npx: package not found` | Offline run / fresh machine | Run with internet on; the installer pre-warms but the cache needs network |
-| 401 from any `/seo ahrefs *` command | Token revoked / expired | Generate a new token at https://ahrefs.com/api and re-run the installer |
+Check `codex mcp list`, the server package and Node version, and whether the Codex process inherited `AHREFS_API_TOKEN`. If a request returns 401, check the token and permissions in your Ahrefs account.

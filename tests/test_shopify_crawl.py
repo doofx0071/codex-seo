@@ -25,6 +25,19 @@ SIG = {"Signature-Agent": '"https://shopify.com"', "Signature-Input": "sig1=(...
 ORIGIN = crawl.Origin("https", "shop.example")
 
 
+def test_shopify_user_agent_uses_codex_identity_for_robots_rules() -> None:
+    assert crawl.USER_AGENT == (
+        "CodexSEO-ShopifyCrawler (+https://github.com/helx0071/codex-seo)"
+    )
+    robots = crawl.RobotFileParser()
+    robots.parse([
+        "User-agent: CodexSEO-ShopifyCrawler",
+        "Disallow: /private",
+    ])
+    assert not robots.can_fetch(crawl.USER_AGENT, "https://shop.example/private/item")
+    assert robots.can_fetch("Googlebot", "https://shop.example/private/item")
+
+
 class _Response:
     def __init__(self, status: int, content: bytes = b"", headers: dict | None = None):
         self.status_code = status

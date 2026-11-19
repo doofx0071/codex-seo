@@ -1,22 +1,12 @@
-name: v2 audit
+name: Checkout verification
 
-# Local-only by design: this workflow is wired up so the v2.0.0 audit
-# pass is ready to fire the moment we authorize a push, but it never
-# runs on a push or pull_request event. The two triggers are:
-#
-#   - workflow_dispatch (manual button in the Actions UI)
-#   - workflow_call    (so future workflows can chain it in)
-#
-# Until the v2 branch is pushed, this file lives on the branch but
-# GitHub never schedules it. After we push, the maintainer triggers it
-# manually from the Actions tab to gate the v2.0.0 tag.
 on:
   workflow_dispatch:
     inputs:
       reason:
         description: "Why this audit run is happening (free text, goes to summary)"
         required: false
-        default: "manual v2 audit"
+        default: "manual checkout verification"
   workflow_call:
 
 permissions:
@@ -24,7 +14,7 @@ permissions:
 
 jobs:
   manifest:
-    name: Manifest consistency (15 assertions)
+    name: Checkout metadata and guide consistency
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -35,7 +25,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install pytest + test deps
-        run: pip install pytest beautifulsoup4
+        run: pip install -r requirements.txt pytest
 
       - name: Run manifest consistency tests
         run: pytest tests/test_manifest_consistency.py -v
@@ -52,9 +42,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install runtime + test deps
-        run: |
-          pip install pytest
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt pytest
 
       - name: Run url_safety regression battery
         run: pytest tests/test_url_safety.py -v
@@ -89,9 +77,7 @@ jobs:
         # missing, so a swallowed install failure resurfaces later as an opaque
         # pytest INTERNALERROR instead of the pip error that caused it. Matches
         # ci.yml, which installs the same set without a fallback.
-        run: |
-          pip install pytest beautifulsoup4
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt pytest
 
       - name: Run pytest
         run: pytest tests/ -v

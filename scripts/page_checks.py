@@ -1170,7 +1170,7 @@ def _probe_canonical(out: dict, page_url: str, fetch, timeout: int) -> None:
         return  # absent, or cut short by _trim and so not the real URL
     # The canonical comes from the page, so it is not the operator's target:
     # fetched public-only, it can never steer a request to an address
-    # CLAUDE_SEO_LOCAL_TARGETS allows. Only the audited page's own host and
+    # CODEX_SEO_LOCAL_TARGETS allows. Only the audited page's own host and
     # port keep the operator's allowlist.
     same_origin = _origin_key(canonical) == _origin_key(page_url)
     try:

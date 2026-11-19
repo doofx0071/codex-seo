@@ -234,7 +234,7 @@ name the specific user-agent that was checked and the specific capability it gov
 
 ## llms.txt Standard
 
-Read `references/llmstxt-evidence.md` for the primary-source evidence (Mueller, Illyes, SE Ranking 300k-domain study, OtterlyAI server-log audit) on why `/llms.txt` is not currently a citation lever for major AI search systems. claude-seo reports presence but assigns no citation-ranking weight.
+Read `references/llmstxt-evidence.md` for the primary-source evidence (Mueller, Illyes, SE Ranking 300k-domain study, OtterlyAI server-log audit) on why `/llms.txt` is not currently a citation lever for major AI search systems. codex-seo reports presence but assigns no citation-ranking weight.
 
 > **Google now states this explicitly.** Google's AI optimization guide, published
 > 2026-05-15 (llms.txt guidance clarified 2026-06-15, last updated 2026-07-10), says `llms.txt` and other AI-text files are
@@ -326,7 +326,7 @@ Google added many AI citation/source surfaces across AI Overviews **and** AI Mod
 
 **Controlling AI-feature appearance:** there is **no AI-specific opt-out file**, but since 2026-08-31 every site has a Search Console control, "Search generative AI" (include by default, exclude, or inherit), that controls eligibility for AI Overviews, AI Mode and generative AI features in Discover; it is not a ranking signal, it is separate from `Google-Extended`, and it is not a training control. Beyond that, appearance is governed by standard preview/index directives, `nosnippet`, `data-nosnippet`, `max-snippet`, `noindex` (distinct from the third-party AI-crawler robots controls above). Source: developers.google.com/search/docs/appearance/ai-features
 
-**Search agents (live, not just WebMCP):** Google's "Information Agents" run in the background to monitor topics, plus agentic booking/calling for select categories (announced at I/O 2026 for a summer US rollout; Information Agents start with AI Pro and Ultra subscribers; confirm current availability before promising it), so agent-friendly-page optimization (real interactive elements, accessibility tree, layout stability) now matters for actions, not only citations. Audit that with `/seo agentic` (the `seo-agentic` sub-skill), which also reads Lighthouse's Agentic Browsing fraction.
+**Search agents (live, not just WebMCP):** Google's "Information Agents" run in the background to monitor topics, plus agentic booking/calling for select categories (announced at I/O 2026 for a summer US rollout; Information Agents start with AI Pro and Ultra subscribers; confirm current availability before promising it), so agent-friendly-page optimization (real interactive elements, accessibility tree, layout stability) now matters for actions, not only citations. Audit that with `$seo agentic` (the `seo-agentic` sub-skill), which also reads Lighthouse's Agentic Browsing fraction.
 
 ---
 
@@ -334,7 +334,7 @@ Google added many AI citation/source surfaces across AI Overviews **and** AI Mod
 
 For AI Overviews or AI Mode visibility changes, check the dated product and
 core-update entries first:
-`"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run seo_updates.py --kind product --kind core --limit 0 --json`.
+`./scripts/codex-seo run seo_updates.py --kind product --kind core --limit 0 --json`.
 `--limit 0` lists every match (the default stops at the 10 newest and sets
 `truncated`). Treat a stale ledger (`freshness.stale`) as incomplete.
 
@@ -401,7 +401,7 @@ If DataForSEO MCP tools are available, use `ai_optimization_chat_gpt_scraper` to
 
 ## FLOW Framework Integration
 
-For prompt-guided AI content optimization, use `/seo flow optimize <url>`, FLOW's 21 optimize-stage prompts complement GEO's citability and structure analysis with evidence-led AI prompts.
+For prompt-guided AI content optimization, use `$seo flow optimize <url>`, FLOW's 21 optimize-stage prompts complement GEO's citability and structure analysis with evidence-led AI prompts.
 
 ## Security
 

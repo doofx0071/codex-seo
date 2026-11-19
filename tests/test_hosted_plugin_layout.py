@@ -1,17 +1,4 @@
-"""Layout contract for the claude.ai-hosted marketplace.
-
-Hosted marketplace sync rejects any plugin that ships a top-level ``bin/``
-directory (``marketplace_sync_bin_directory_not_allowed``). The launcher
-therefore lives in ``scripts/`` beside ``runtime.py``, and every skill, agent,
-and doc invokes it through the documented plugin-relative variable:
-
-    "${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run <script.py>
-
-Claude Code substitutes ``${CLAUDE_PLUGIN_ROOT}`` in skill body content and in
-``allowed-tools`` Bash rules, and exports it to hook processes. The quoting
-keeps the command correct when the plugin root contains spaces. Manual
-installers rewrite that exact token to the absolute installed path.
-"""
+"""Layout and checkout invocation checks for the Codex SEO launcher."""
 
 from __future__ import annotations
 
@@ -23,14 +10,13 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-LAUNCHER = ROOT / "scripts" / "claude-seo"
-CANONICAL = '"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo"'
-MANUAL = '"$HOME/.claude/skills/seo/scripts/claude-seo"'
+LAUNCHER = ROOT / "scripts" / "codex-seo"
+CHECKOUT_LAUNCHER = "./scripts/codex-seo"
+PLUGIN_ROOT_LAUNCHER = "${CODEX_SEO_PLUGIN_ROOT}/scripts/codex-seo"
 
-# A bare invocation is ``claude-seo run`` with nothing in front of it. The
-# repository-relative form ``./scripts/claude-seo run`` and the canonical form
-# (which puts a closing quote between the name and the subcommand) do not match.
-BARE_INVOCATION = re.compile(r"(?<![A-Za-z0-9_/])claude-seo (?:run|setup|doctor)\b")
+# A bare invocation is ``codex-seo run`` with nothing in front of it. The
+# repository-relative form ``./scripts/codex-seo run`` does not match.
+BARE_INVOCATION = re.compile(r"(?<![A-Za-z0-9_/])codex-seo (?:run|setup|doctor)\b")
 
 # CHANGELOG.md records the historical bare form in released entries and must
 # keep reading as written.
@@ -87,39 +73,22 @@ def test_no_instruction_file_keeps_a_bare_launcher_invocation() -> None:
     assert not offenders, "bare launcher invocations found: " + "; ".join(offenders)
 
 
-def test_instruction_files_use_the_canonical_plugin_root_form() -> None:
+def test_instruction_files_use_the_checkout_launcher() -> None:
+    docs = {rel: (ROOT / rel).read_text(encoding="utf-8") for rel in _instruction_docs()}
     carriers = [
         rel
-        for rel in _instruction_docs()
-        if CANONICAL in (ROOT / rel).read_text(encoding="utf-8")
+        for rel, text in docs.items()
+        if CHECKOUT_LAUNCHER in text
     ]
-    assert len(carriers) > 30, "the canonical launcher form should be used repo-wide"
+    assert len(carriers) > 30, "the checkout launcher form should be used repo-wide"
     assert "skills/seo/SKILL.md" in carriers
     assert "agents/seo-technical.md" in carriers
-
-
-def test_installers_reference_the_scripts_launcher() -> None:
-    unix = (ROOT / "install.sh").read_text(encoding="utf-8")
-    assert 'cp "${TEMP_DIR}/claude-seo/scripts/claude-seo" "${SKILL_DIR}/scripts/claude-seo"' in unix
-    assert 'chmod +x "${SKILL_DIR}/scripts/claude-seo"' in unix
-    assert '"${SKILL_DIR}/scripts/claude-seo" setup' in unix
-    for subcommand in ("run", "setup", "doctor"):
-        assert f"s#{CANONICAL} {subcommand}#{MANUAL} {subcommand}#g" in unix
-    assert "bin/claude-seo" not in unix
-
-    windows = (ROOT / "install.ps1").read_text(encoding="utf-8")
-    assert "Join-Path $ScriptsPath 'claude-seo'" in windows
-    assert "Join-Path $SkillDir 'scripts'" in windows
-    for subcommand in ("run", "setup", "doctor"):
-        assert f"'{CANONICAL} {subcommand}'" in windows
-        assert f"'{MANUAL} {subcommand}'" in windows
-    assert "bin/claude-seo" not in windows
+    assert not [rel for rel, text in docs.items() if PLUGIN_ROOT_LAUNCHER in text]
 
 
 @pytest.mark.skipif(
     os.name != "posix",
-    reason="the launcher is a bash script; Windows installs use install.ps1 and py -3, "
-    "which the manual installer smoke workflow exercises",
+    reason="the launcher requires Bash",
 )
 def test_launcher_runs_without_network_or_managed_runtime() -> None:
     """``doctor --help`` is handled by argparse before any venv is touched."""
@@ -136,4 +105,4 @@ def test_launcher_runs_without_network_or_managed_runtime() -> None:
     )
     assert result.returncode == 0, result.stderr
     plain = re.sub(r"\x1b\[[0-9;]*m", "", result.stdout)
-    assert "usage: claude-seo doctor" in plain
+    assert "usage: codex-seo doctor" in plain

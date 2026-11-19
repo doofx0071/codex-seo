@@ -1,4 +1,4 @@
-"""Development rules from CLAUDE.md: SKILL.md files stay under 500 lines and
+"""Development rules: SKILL.md files stay under 500 lines and
 reference files stay under 200 lines, so on-demand loading stays cheap.
 
 Six references had grown past 200 lines by v2.4.0; they were split in v2.4.1.

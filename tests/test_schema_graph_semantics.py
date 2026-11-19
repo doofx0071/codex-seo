@@ -1,16 +1,16 @@
 """A `@graph` document must be read the same way by the seo-schema path and by
-the post-edit hook.
+the standalone validator.
 
-`hooks/validate-schema.py` already treats a top-level `@graph` container as a
+`scripts/validate_schema.py` treats a top-level `@graph` container as a
 container rather than an entity: the container needs no `@type`, and its
 entries inherit the `@context` the document declares (see
 `test_valid_top_level_graph_does_not_require_container_type` in
-`tests/test_schema_hook_policy.py`).
+`tests/test_schema_validator_policy.py`).
 
 The seo-schema path did not agree. `scripts/parse_html.py` flattened the
 graph and dropped the document's `@context`, so every entry came out as a
 block with an `@type` but no `@context`, and the skill and the agent told
-Claude to flag exactly that as broken markup. A valid graph document was
+Codex to flag exactly that as broken markup. A valid graph document was
 reported as broken on every one of its entries.
 """
 
@@ -29,7 +29,7 @@ from parse_html import parse_html  # noqa: E402
 
 SKILL = REPO_ROOT / "skills" / "seo-schema" / "SKILL.md"
 AGENT = REPO_ROOT / "agents" / "seo-schema.md"
-HOOK = REPO_ROOT / "hooks" / "validate-schema.py"
+VALIDATOR = REPO_ROOT / "scripts" / "validate_schema.py"
 
 GRAPH_HTML = (
     "<html><head><title>t</title>"
@@ -41,9 +41,9 @@ GRAPH_HTML = (
 )
 
 
-def _load_hook():
-    """Import the hook module, whose filename cannot be used as an import name."""
-    spec = importlib.util.spec_from_file_location("validate_schema", HOOK)
+def _load_validator():
+    """Import the validator module from its script path."""
+    spec = importlib.util.spec_from_file_location("validate_schema", VALIDATOR)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -117,11 +117,11 @@ def test_non_graph_schema_blocks_are_untouched() -> None:
     ]
 
 
-def test_reported_graph_entries_pass_the_post_edit_hook() -> None:
-    """What the seo-schema path reports has to satisfy the hook that accepts graphs."""
-    hook = _load_hook()
+def test_reported_graph_entries_pass_the_standalone_validator() -> None:
+    """What the seo-schema path reports has to satisfy the standalone validator."""
+    validator = _load_validator()
     result = parse_html(GRAPH_HTML)
-    assert hook.validate_jsonld(_schema_blocks(result["schema"])) == []
+    assert validator.validate_jsonld(_schema_blocks(result["schema"])) == []
 
 
 def test_seo_schema_skill_states_the_graph_rule() -> None:

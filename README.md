@@ -1,51 +1,47 @@
 # Codex SEO
 
-A Codex-first SEO workspace based on [AgriciDaniel/claude-seo](https://github.com/AgriciDaniel/claude-seo). The upstream project supplies 29 SEO skill guides, 20 specialist prompts, and the local Python toolkit. This fork adds Codex-native skill discovery and custom agent roles while preserving the upstream code and MIT license.
+Audit websites and web projects in Codex or ChatGPT. Codex SEO covers crawlability, indexing, structured data, content quality, Core Web Vitals, AI search, local search, and ecommerce. It produces an evidence-backed report with prioritized fixes and identifies the checks it could not run.
 
-## Use it in Codex
+| Use | Start here |
+|---|---|
+| Codex checkout with local scripts and specialist agents | [Installation](docs/INSTALLATION.md) |
+| Portable skill for ChatGPT Desktop and Codex | [Plugin build and verification](docs/PHASE1-VERIFICATION.md) |
+| Optional SEO and analytics providers | [Integrations](docs/MCP-INTEGRATION.md) |
+| Examples and supported prompts | [Command reference](docs/COMMANDS.md) |
 
-This Codex adaptation is currently on the `codex-native-support` branch.
+## Run from a Codex checkout
 
-1. Clone this branch and open the folder in Codex:
-
-~~~bash
+```bash
 git clone --branch codex-native-support https://github.com/helx0071/codex-seo.git
-~~~
+cd codex-seo
+```
 
-2. Let Codex load the project instructions and skills. The project skill is under `.agents/skills/seo/`; the specialist roles are under `.codex/agents/`.
-3. Ask Codex to use the `$seo` skill:
+Open the checkout in Codex. Codex discovers the `$seo` skill under `.agents/skills/seo/` and the project-scoped specialist agents in `.codex/agents/`. Try these prompts:
 
-~~~text
+```text
 $seo audit https://example.com
 $seo page https://example.com/pricing
 $seo technical https://example.com
 $seo geo https://example.com
-~~~
+```
 
-The skill routes requests to the existing specialist guides under `skills/`, then uses the existing `agents/` prompts for delegated analysis. It keeps the work in Codex's native skill and agent formats instead of requiring Claude Code or Claude-only plugin commands.
+For script-backed checks, use Bash and Python 3.11 to 3.14. On Windows, use Git Bash or WSL with Python installed in the same environment. Check readiness and explicitly set up the isolated runtime when needed:
 
-## Runtime
+```bash
+./scripts/codex-seo doctor --json
+./scripts/codex-seo setup
+```
 
-For script-backed checks, the skill uses the repository's managed launcher:
+From another working directory, use the quoted absolute path to the checkout's launcher. Keep the audited project as the working directory so local inputs and audit files resolve there. Managed scripts provide guarded fetches, processing of raw HTML and browser measurements when Chromium is available. Search performance, traffic and provider metrics require access to the corresponding data source.
 
-~~~bash
-./scripts/claude-seo doctor --json
-./scripts/claude-seo run render_page.py https://example.com --mode auto --json
-~~~
+The project config allows four active specialist agents. The root session keeps your selected model. Adjust `.codex/config.toml` and the role files if a configured specialist model is unavailable.
 
-The launcher requires Bash and Python 3.11–3.14. On Windows, run it from WSL or Git Bash. The isolated runtime setup changes the local environment, so request setup explicitly before running:
+## Use the portable plugin
 
-~~~bash
-./scripts/claude-seo setup
-~~~
+Use the plugin on a ChatGPT or Codex surface with access to the built archive. It follows the same audit method using the browsing and document tools available in its host. For example, ask “Use Codex SEO to audit https://example.com and mark any unavailable measurements.” See [Phase 1 verification](docs/PHASE1-VERIFICATION.md) for package availability and desktop smoke checks.
 
-Some integrations need their own credentials or MCP connection. They are optional; a basic audit can still report which checks could not be measured. Do not treat estimates from source inspection as measured Core Web Vitals.
+See [migration notes](docs/MIGRATION-v1-to-v2.md) for an existing checkout and [community integrations](docs/COMMUNITY-INTEGRATIONS.md) for contributed tools.
 
-## Model and parallelism
+## Credits and license
 
-The project config uses `gpt-6-luna` with high reasoning for ordinary SEO specialists, caps active subagents at four, and assigns `seo-technical` to `gpt-6.2-sol` for more demanding technical and security checks. The root Codex session remains on the model you select. Edit `.codex/config.toml` and the relevant agent TOML if those models are unavailable or you prefer different usage.
-
-## Upstream and license
-
-This is a fork of [AgriciDaniel/claude-seo](https://github.com/AgriciDaniel/claude-seo). The upstream project already includes cross-agent guidance for Codex; this branch adds a Codex-discoverable entry point and native custom-agent configurations. The original code and guides remain attributed to their authors under the MIT License in [LICENSE](LICENSE). For the upstream Claude Code installation and extension documentation, see the original repository.
-
+Codex SEO is a fork of [AgriciDaniel/claude-seo](https://github.com/AgriciDaniel/claude-seo). See [CONTRIBUTORS.md](CONTRIBUTORS.md) for author and community attribution and [LICENSE](LICENSE) for the MIT copyright and permission notice.

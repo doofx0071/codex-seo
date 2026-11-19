@@ -19,12 +19,13 @@ aspect ratios, and resolution defaults.
 
 ## Architecture Note
 
-This extension is built on [Claude Banana](https://github.com/AgriciDaniel/banana-claude),
-the standalone AI image generation skill for Claude Code.
+This extension adapts the upstream [Banana image-generation project](https://github.com/AgriciDaniel/banana-claude)
+for Codex SEO. In this checkout, image requests use Gemini through
+`nanobanana-mcp`.
 
 This skill has two components with distinct roles:
-- **SKILL.md** (this file): Handles interactive `/seo image-gen` commands for generating images
-- **Agent** (`agents/seo-image-gen.md`): Audit-only analyst spawned during `/seo audit` to assess existing OG/social images and produce a generation plan (never auto-generates)
+- **SKILL.md** (this file): Handles interactive `$seo image-gen` commands for generating images
+- **Agent** (`agents/seo-image-gen.md`): Audit-only analyst spawned during `$seo audit` to assess existing OG/social images and produce a generation plan (never auto-generates)
 
 ## Prerequisites
 
@@ -42,12 +43,12 @@ and provide install instructions.
 
 | Command | What it does |
 |---------|-------------|
-| `/seo image-gen og <description>` | Generate OG/social preview image (1200x630 feel) |
-| `/seo image-gen hero <description>` | Blog hero image (widescreen, dramatic) |
-| `/seo image-gen product <description>` | Product photography (clean, white BG) |
-| `/seo image-gen infographic <description>` | Infographic visual (vertical, data-heavy) |
-| `/seo image-gen custom <description>` | Custom image with full Creative Director pipeline |
-| `/seo image-gen batch <description> [N]` | Generate N variations (default: 3) |
+| `$seo image-gen og <description>` | Generate OG/social preview image (1200x630 feel) |
+| `$seo image-gen hero <description>` | Blog hero image (widescreen, dramatic) |
+| `$seo image-gen product <description>` | Product photography (clean, white BG) |
+| `$seo image-gen infographic <description>` | Infographic visual (vertical, data-heavy) |
+| `$seo image-gen custom <description>` | Custom image with full Creative Director pipeline |
+| `$seo image-gen batch <description> [N]` | Generate N variations (default: 3) |
 
 ## SEO Image Use Cases
 
@@ -143,12 +144,12 @@ Approximate costs:
 | API key invalid | New key at https://aistudio.google.com/apikey |
 | Rate limited (429) | Wait 60s, retry. Free tier: ~10 RPM / ~500 RPD |
 | `IMAGE_SAFETY` | Rephrase prompt - see `references/prompt-adaptation-safety.md` |
-| MCP unavailable | Configure MCP with `./extensions/banana/install.sh`; claude-seo does not vendor a local generation fallback script |
+| MCP unavailable | Configure MCP using the Banana extension setup guide; codex-seo does not vendor a local generation fallback script |
 | Extension not installed | Show install instructions: `./extensions/banana/install.sh` |
 
 ## Cross-Skill Integration
 
-- **seo-images** (analysis) feeds into **seo-image-gen** (generation): audit results from `/seo images` identify missing or low-quality images; use those findings to drive `/seo image-gen` commands
+- **seo-images** (analysis) feeds into **seo-image-gen** (generation): audit results from `$seo images` identify missing or low-quality images; use those findings to drive `$seo image-gen` commands
 - **seo-audit** spawns the seo-image-gen **agent** (not this skill) to analyze OG/social images across the site and produce a prioritized generation plan
 - **seo-schema** can consume generated images: after generation, suggest `ImageObject` schema markup pointing to the new assets
 

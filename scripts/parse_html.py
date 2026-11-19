@@ -890,8 +890,8 @@ def _stdin_has_piped_input() -> bool:
     """Return True when stdin is a pipe or a regular file.
 
     With ``--url`` and no file, stdin is only worth reading when something
-    was piped or redirected into it. An inherited socket (as in the Claude
-    desktop app) or a terminal stays open without ever being written, so a
+    was piped or redirected into it. An inherited socket from a desktop host
+    application or a terminal stays open without ever being written, so a
     blind ``sys.stdin.read()`` blocks forever; ``isatty()`` alone does not
     catch the socket case.
     """

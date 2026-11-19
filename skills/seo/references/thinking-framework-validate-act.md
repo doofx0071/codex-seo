@@ -53,7 +53,7 @@ Stop strategizing. Produce the artifact:
   measurable outcomes.
 - Generated schema JSON-LD ready to paste into the site.
 - A content brief with target keywords, outline, and internal links.
-- A PDF via `"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run google_report.py` when the user asks for one.
+- A PDF via `./scripts/codex-seo run google_report.py` when the user asks for one.
 - The smallest implementation of the highest-leverage recommendation,
   not the full plan.
 
@@ -63,14 +63,14 @@ Stop strategizing. Produce the artifact:
 
 The audit is a snapshot, not a verdict. Build the feedback loop:
 
-- Capture a baseline via `/seo drift baseline <url>` so subsequent
+- Capture a baseline via `$seo drift baseline <url>` so subsequent
   audits can prove what changed.
 - Define one or two leading indicators the user should monitor (CrUX
   trend, GSC impressions for a target cluster, brand-mention growth on
   Reddit / YouTube).
 - Schedule a re-audit cadence appropriate to the site's velocity
   (weekly for a high-churn ecommerce; quarterly for a B2B SaaS).
-- Surface what claude-seo itself **could not measure** (offline
+- Surface what codex-seo itself **could not measure** (offline
   conversion, brand lift, customer interviews) so the human closes
   those loops.
 

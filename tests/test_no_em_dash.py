@@ -1,7 +1,7 @@
 """House-style gate: no em dash (U+2014) in the shipped instruction/code surface.
 
 The 2026-09-28 house-style pass removed every em dash from skills/, agents/,
-scripts/, schema/, data/, extensions/, docs/, README.md, CLAUDE.md and
+scripts/, schema/, data/, extensions/, docs/, README.md, and
 AGENTS.md, rewriting each into plain punctuation (comma, period, colon,
 parentheses or conjunction) so the codebase reads consistently. This test is
 the regression gate: it fails if a future edit reintroduces one. tests/ joined
@@ -48,7 +48,7 @@ TARGET_PREFIXES = (
     "docs/",
     "tests/",
 )
-TARGET_FILES = {"README.md", "CLAUDE.md", "AGENTS.md"}
+TARGET_FILES = {"README.md", "AGENTS.md"}
 
 EXCLUDED_PREFIXES = ("skills/seo-flow/references/prompts/",)
 EXCLUDED_FILES = {"skills/seo-flow/references/flow-prompts.lock"}
@@ -75,7 +75,6 @@ ALLOWLIST = {
 # when a file is cleaned up and delete the entry when it reaches zero.
 LEGACY_TEST_LINE_COUNTS = {
     "tests/test_gbp_lint_and_polish.py": 2,
-    "tests/test_manifest_consistency.py": 3,
     "tests/test_metadata_template.py": 4,
     "tests/test_parasite_risk_and_extensions.py": 1,
     "tests/test_phase_j_executable.py": 5,

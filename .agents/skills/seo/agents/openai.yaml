@@ -1,6 +1,11 @@
-interface:
-  display_name: "SEO"
-  short_description: "Run evidence-backed SEO audits"
-  default_prompt: "Use $seo to audit this website and produce a prioritized, evidence-backed action plan."
-policy:
-  allow_implicit_invocation: true
+{
+  "interface": {
+    "display_name": "SEO",
+    "short_description": "Evidence-backed SEO audits",
+    "default_prompt": "Use $seo to audit this website. Cite observable evidence, prioritize fixes, and label unavailable measurements."
+  },
+  "policy": {
+    "allow_implicit_invocation": true,
+    "products": ["CHAT", "CODEX"]
+  }
+}

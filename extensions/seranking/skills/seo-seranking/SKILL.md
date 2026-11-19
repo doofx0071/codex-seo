@@ -3,7 +3,7 @@ name: seo-seranking
 description: SE Ranking AI visibility analyst (extension). Tracks AI Share-of-Voice across ChatGPT, Gemini, Perplexity, AI Overviews, and AI Mode in a single query.
 metadata:
   version: "2.6.2"
-compatibility: "Requires an SE Ranking API key (set SERANKING_API_KEY by running extensions/seranking/install.sh)."
+compatibility: "Requires SERANKING_API_KEY in the Codex runtime environment."
 ---
 
 # seo-seranking
@@ -12,18 +12,18 @@ Live AI visibility tracking via the SE Ranking REST API.
 
 ## Prerequisites
 
-- Run `extensions/seranking/install.sh` (or `install.ps1`).
+- Configure the SE Ranking API key using the [setup guide](../../docs/SERANKING-SETUP.md).
 - An SE Ranking API key (https://seranking.com/api.html).
-- Before any call, verify `SERANKING_API_KEY` is present in `~/.claude/settings.json` under `env.`. If absent, tell the user to run the installer.
+- Before any call, verify `SERANKING_API_KEY` is available in the Codex runtime environment. If absent, refer to the extension setup guide.
 
 ## Routing
 
 | Command | Purpose |
 |---|---|
-| `/seo seranking ai-visibility <brand>` | Share-of-voice for `brand` across ChatGPT, Gemini, Perplexity, AI Overviews, AI Mode |
-| `/seo seranking serp <keyword>` | Top 100 organic positions + SERP features |
-| `/seo seranking backlinks <url>` | Backlink profile (alternative vendor source to Ahrefs / DataForSEO) |
-| `/seo seranking competitors <url>` | Top 10 organic competitors and shared-keyword gaps |
+| `$seo seranking ai-visibility <brand>` | Share-of-voice for `brand` across ChatGPT, Gemini, Perplexity, AI Overviews, AI Mode |
+| `$seo seranking serp <keyword>` | Top 100 organic positions + SERP features |
+| `$seo seranking backlinks <url>` | Backlink profile (alternative vendor source to Ahrefs / DataForSEO) |
+| `$seo seranking competitors <url>` | Top 10 organic competitors and shared-keyword gaps |
 
 ## AI Share-of-Voice scoring
 
@@ -42,7 +42,7 @@ Report each as a percentage with a confidence note based on sample size.
 ## Cost guardrails
 
 SE Ranking API uses unit accounting. Single AI visibility query is
-~5 units (1 per platform). Use `"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run dataforseo_costs.py` to log
+~5 units (1 per platform). Use `./scripts/codex-seo run dataforseo_costs.py` to log
 spend across vendors.
 
 ## Cross-skill delegation

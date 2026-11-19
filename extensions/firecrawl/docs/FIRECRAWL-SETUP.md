@@ -7,43 +7,36 @@
 3. Navigate to **API Keys** in the dashboard
 4. Copy your API key (starts with `fc-`)
 
-## 2. Run the Installer
+## Install
 
-The installer handles everything automatically:
+From the Codex SEO checkout with its [managed runtime](../../../docs/INSTALLATION.md) set up:
 
-```bash
+```text
 ./extensions/firecrawl/install.sh
+# Windows PowerShell (Git Bash must be on PATH)
+.\extensions\firecrawl\install.ps1
 ```
 
-It will prompt for your API key and configure the MCP server.
+This registers the optional checkout skill under `.agents/skills/`. Open a new Codex session to discover it.
 
-## 3. Manual MCP Configuration
+Install Node.js 20+ and set `FIRECRAWL_API_KEY` in your local environment.
 
-If the installer fails, add this to `~/.claude.json` manually:
+## Configure MCP
 
-```json
-{
-  "mcpServers": {
-    "firecrawl-mcp": {
-      "command": "npx",
-      "args": ["-y", "firecrawl-mcp"],
-      "env": {
-        "FIRECRAWL_API_KEY": "fc-your-api-key-here"
-      }
-    }
-  }
-}
+Add this entry to your user `~/.codex/config.toml`. Set the named credentials in the environment that starts Codex. See [MCP and provider setup](../../../docs/MCP-INTEGRATION.md).
+
+```toml
+[mcp_servers.firecrawl-mcp]
+command = "npx"
+args = ["-y", "firecrawl-mcp@3.11.0"]
+env_vars = ["FIRECRAWL_API_KEY"]
 ```
 
-## 4. Verify Installation
+Verify registration with `codex mcp list`.
 
-Start Claude Code and try:
+## Verify installation
 
-```
-/seo firecrawl map https://example.com
-```
-
-You should see a list of discovered URLs. If you get a "tool not available" error, restart Claude Code to reload MCP servers.
+Confirm the connection in Codex. Firecrawl operations can consume credits. Review the expected cost before running a live crawl.
 
 ## 5. Understanding Credits
 

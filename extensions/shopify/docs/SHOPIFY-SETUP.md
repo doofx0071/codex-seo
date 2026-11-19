@@ -3,8 +3,7 @@
 ## What this gives you
 
 1. **An uncapped, sitemap-complete crawl** of a Shopify storefront via
-   `"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run shopify_crawl.py` instead of
-   the 500-page link-following crawl in `seo-audit`.
+   `shopify_crawl.py`, using the checkout launcher shown under [Check and crawl](#3-check-and-crawl).
 2. **An authorized crawler** in the storefront's eyes, because every request
    carries the store's Crawler Access signature (RFC 9421 message signature,
    tag `web-bot-auth`), read from a project-local `.shopify-env`. Shopify's help
@@ -19,19 +18,19 @@ you or your client administer. Everything else keeps crawling unsigned.
 
 ## Install
 
+The checkout already contains the Shopify guide and its managed crawl scripts. To also register the optional `$seo-shopify` skill and create the placeholders-only `.shopify-env`, run this from the audited project directory with the checkout runtime set up:
+
 ```bash
-./extensions/shopify/install.sh
-.\extensions\shopify\install.ps1
+bash "/absolute/path/to/codex-seo/extensions/shopify/install.sh" --create-shopify-env
 ```
 
-No API keys. The `seo-shopify` skill ships with the claude-seo plugin, so on a
-plugin install the installer copies nothing; run it from the plugin or repository
-folder. On a manual install (`~/.claude/skills/seo`) it copies the skill next to
-the other skills with its launcher path rewritten. The scripts ship with
-claude-seo already. In both cases it offers to create `.shopify-env` in the
-current folder from the template, readable by you only (mode 0600), and never
-overwrites an existing file. `uninstall.sh` removes the copied skill of a manual
-install and leaves `.shopify-env` alone.
+On Windows PowerShell with Git Bash on `PATH`:
+
+```powershell
+& 'C:\path\to\codex-seo\extensions\shopify\install.ps1' --create-shopify-env
+```
+
+Omit `--create-shopify-env` to register the skill without creating the template. An existing file is preserved. The template uses owner-only permissions on POSIX. On Windows, restrict access to your user before adding the signature. The uninstall script removes the skill registration and leaves the project file in place.
 
 ## 1. Issue the signature
 
@@ -111,13 +110,17 @@ work tree without being ignored.
 
 ## 3. Check and crawl
 
+Run these commands from the audited project's directory. Substitute the absolute
+path to your Codex SEO checkout and keep the launcher path quoted. This lets the
+commands find the project's `.shopify-env` and write artifacts to its `./crawl`.
+
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run shopify_env.py list
-"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run shopify_env.py check https://shop.example
-"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run shopify_crawl.py https://shop.example --out ./crawl
+"/absolute/path/to/codex-seo/scripts/codex-seo" run shopify_env.py list
+"/absolute/path/to/codex-seo/scripts/codex-seo" run shopify_env.py check https://shop.example
+"/absolute/path/to/codex-seo/scripts/codex-seo" run shopify_crawl.py https://shop.example --out ./crawl
 ```
 
-Or in Claude Code: `/seo shopify https://shop.example`.
+Or in Codex: `$seo shopify https://shop.example`.
 
 ## Security notes
 

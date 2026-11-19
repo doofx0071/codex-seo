@@ -140,33 +140,6 @@ def check_script_refs(files, texts):
     return errors, orphans
 
 
-def check_skill_dir_script_refs(files, texts):
-    """Validate scripts invoked through Claude's portable skill-root variable.
-
-    Extension installers place their scripts beside the installed skill. In the
-    source tree those scripts live at ``extensions/<name>/scripts``. Core skills
-    must carry scripts inside their own skill directory before using this form.
-    """
-    pat = re.compile(r'\$\{CLAUDE_SKILL_DIR\}/scripts/([A-Za-z0-9_]+\.py)\b')
-    errors = []
-    for f in texts:
-        for script in sorted(set(pat.findall(read(f)))):
-            ext_root = extension_root(f)
-            if ext_root:
-                candidate = f"{ext_root}/scripts/{script}"
-            elif f.startswith("skills/"):
-                skill_root = "/".join(f.split("/")[:2])
-                candidate = f"{skill_root}/scripts/{script}"
-            else:
-                errors.append(f"{f}: CLAUDE_SKILL_DIR script used outside a skill layout")
-                continue
-            if candidate not in files and not os.path.isfile(os.path.join(REPO, candidate)):
-                errors.append(
-                    f"{f}: dead skill-root script {script} (checked: {candidate})"
-                )
-    return errors
-
-
 def check_runtime_invocations(texts):
     """Reject cwd-dependent or interpreter-dependent bundled script commands."""
     errors = []
@@ -178,10 +151,9 @@ def check_runtime_invocations(texts):
         r"\b(?:python3|python|py\s+-3)\s+[^\n`]*?scripts/[A-Za-z0-9_./-]+\.py"
     )
     raw_path = re.compile(r"(?<![\w/])scripts/([A-Za-z0-9_]+\.py)\b")
-    # The canonical form is "${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run <script>,
-    # so the closing quote may sit between the launcher name and the subcommand.
+    # Checkout commands may also use a quoted absolute path to the launcher.
     runtime = re.compile(
-        r"claude-seo[\"']?\s+run(?:\s+--extension\s+[a-z0-9-]+)?\s+([A-Za-z0-9_-]+\.py)"
+        r"codex-seo[\"']?\s+run(?:\s+--extension\s+[a-z0-9-]+)?\s+([A-Za-z0-9_-]+\.py)"
     )
     for f in carriers:
         content = read(f)
@@ -190,7 +162,7 @@ def check_runtime_invocations(texts):
         for script in sorted(set(raw_path.findall(content))):
             errors.append(
                 f"{f}: unsupported raw script path scripts/{script}; "
-                f'use "${{CLAUDE_PLUGIN_ROOT}}/scripts/claude-seo" run {script}'
+                f'use ./scripts/codex-seo run {script}'
             )
         for script in sorted(set(runtime.findall(content))):
             if not os.path.isfile(os.path.join(REPO, "scripts", script)) and not any(
@@ -202,7 +174,7 @@ def check_runtime_invocations(texts):
 
 
 def check_routing(files):
-    cmd_pat = re.compile(r'`/seo(?:\s+([a-z][a-z0-9-]*))?')
+    cmd_pat = re.compile(r'`\$seo(?:\s+([a-z][a-z0-9-]*))?')
     tables = {src: {m for m in cmd_pat.findall(read(src)) if m}
               for src in ("skills/seo/SKILL.md", "docs/COMMANDS.md")}
     skill_tokens = {d.split("/")[1][4:] for d in files
@@ -210,14 +182,14 @@ def check_routing(files):
     ext_tokens = {p.split("/")[3][4:] for p in files
                   if re.match(r'extensions/[^/]+/skills/seo-[^/]+/SKILL\.md$', p)}
     known = skill_tokens | ext_tokens
-    a, b = tables["skills/seo/SKILL.md"], tables["docs/COMMANDS.md"]
+    a, b = (tokens - RUNTIME_UTILITY_COMMANDS for tokens in tables.values())
     errors = []
     for c in sorted(a - b):
-        errors.append(f"routing: `/seo {c}` in orchestrator but not docs/COMMANDS.md")
+        errors.append(f"routing: `$seo {c}` in orchestrator but not docs/COMMANDS.md")
     for c in sorted(b - a):
-        errors.append(f"routing: `/seo {c}` in docs/COMMANDS.md but not orchestrator")
+        errors.append(f"routing: `$seo {c}` in docs/COMMANDS.md but not orchestrator")
     for c in sorted((a | b) - known - RUNTIME_UTILITY_COMMANDS):
-        errors.append(f"routing: `/seo {c}` has no matching skill directory")
+        errors.append(f"routing: `$seo {c}` has no matching skill directory")
     return errors
 
 
@@ -226,10 +198,8 @@ def check_agent_refs(files, texts):
 
     Path-aware, like the script-reference check: an agent resolves against the
     repo-root ``agents/`` tree, and additionally against any extension's own
-    ``extensions/<ext>/agents/`` tree. Extension-supplied agents
-    (``seo-matomo``) ship only inside their extension and are copied into
-    ``~/.claude/agents/`` at install time, so a mention of them is live, not
-    dead. Extensions whose agent is mirrored into the core tree
+    ``extensions/<ext>/agents/`` tree. Extension-supplied prompts (such as ``seo-matomo``) are read directly
+    from their extension. Extensions whose agent is mirrored into the core tree
     (``seo-dataforseo``, ``seo-image-gen``) resolve either way.
     """
     agents = {os.path.basename(f)[:-3] for f in files
@@ -316,7 +286,6 @@ def main():
     ref_errors, ref_infos = check_references(fileset, md)
     script_errors, script_orphans = check_script_refs(fileset, texts)
     errors = (ref_errors + check_research_refs(fileset, texts) + script_errors
-              + check_skill_dir_script_refs(fileset, texts)
               + check_runtime_invocations(texts)
               + check_routing(fileset) + check_agent_refs(fileset, texts)
               + check_flow_lock(fileset))

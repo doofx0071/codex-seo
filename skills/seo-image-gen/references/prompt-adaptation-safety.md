@@ -1,10 +1,11 @@
-# Prompt Adaptation, Mistakes and Safety Rephrasing: Claude Banana
+# Prompt Adaptation, Mistakes and Safety Rephrasing: Nano Banana
 
 > Split from `prompt-engineering.md`. Load it when adapting a prompt to a model, reviewing a weak prompt, or handling an `IMAGE_SAFETY` block.
 
 ## Prompt Adaptation Rules
 
-When adapting prompts from the claude-prompts database (Midjourney/DALL-E/etc.)
+When adapting prompts from external image-prompt libraries (Midjourney, DALL-E,
+and similar tools)
 to Gemini's natural language format:
 
 | Source Syntax | Gemini Equivalent |

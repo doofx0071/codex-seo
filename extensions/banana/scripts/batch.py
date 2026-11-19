@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Claude Banana - CSV Batch Workflow
+"""Codex Banana - CSV Batch Workflow
 
 Parse a CSV file of image generation requests and output a structured plan.
-Claude then executes each row via MCP.
+Codex then executes each row via MCP.
 
 Usage:
     batch.py --csv path/to/file.csv --model MODEL [--unit-cost USD]
@@ -87,7 +87,7 @@ def main():
                     if unit_cost is not None
                     else "No estimate; pass --unit-cost after checking current Google pricing")
 
-    # Output structured JSON for Claude to consume
+    # Output structured JSON for Codex to consume
     print(json.dumps({"rows": rows, "total_count": len(rows),
                        "estimated_cost": total_cost,
                        "pricing_note": pricing_note,

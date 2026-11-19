@@ -185,12 +185,12 @@ def test_extension_skillmd_has_required_frontmatter(
     assert f"name: {skill_dir}" in head, f"{name}: frontmatter name must be {skill_dir}"
     assert "description:" in head, f"{name}: missing description"
     assert "metadata:" in head, f"{name}: missing metadata block"
-    import json as _json
-    _expected = _json.loads(
-        (_REPO_ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8")
-    )["version"]
+    import tomllib
+    _expected = tomllib.loads(
+        (_REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    )["project"]["version"]
     assert f'version: "{_expected}"' in head, (
-        f"{name}: SKILL.md must declare version {_expected} (from plugin.json)"
+        f"{name}: SKILL.md must declare version {_expected} (from pyproject.toml)"
     )
 
 

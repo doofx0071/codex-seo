@@ -33,7 +33,7 @@ Output schema
 ::
 
     {
-      "version": "v2.0.0",                      # plugin.json version
+      "version": "v2.0.0",                      # checkout package version
       "tag":     "v2.0.0",                      # git tag or "(uncommitted)"
       "commit":  "abc123…",                     # git HEAD
       "generated_at": "2026-05-17T14:32:00Z",
@@ -55,6 +55,7 @@ import hashlib
 import json
 import subprocess
 import sys
+import tomllib
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
@@ -96,12 +97,12 @@ def _sha256(path: Path) -> str:
     return h.hexdigest()
 
 
-def _read_plugin_version() -> str:
-    manifest = REPO_ROOT / ".claude-plugin" / "plugin.json"
+def _read_checkout_version() -> str:
+    metadata = REPO_ROOT / "pyproject.toml"
     try:
-        with manifest.open() as fh:
-            return json.load(fh).get("version", "unknown")
-    except (OSError, json.JSONDecodeError):
+        with metadata.open("rb") as fh:
+            return tomllib.load(fh).get("project", {}).get("version", "unknown")
+    except (OSError, tomllib.TOMLDecodeError):
         return "unknown"
 
 
@@ -126,7 +127,7 @@ def build_manifest(files: Iterable[str] | None = None) -> dict:
     tree_sha = hashlib.sha256(tree_input.encode("utf-8")).hexdigest()
 
     return {
-        "version": _read_plugin_version(),
+        "version": _read_checkout_version(),
         "tag": _git_or_none("describe", "--tags", "--exact-match") or "(uncommitted)",
         "commit": _git_or_none("rev-parse", "HEAD") or "(uncommitted)",
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -152,7 +153,7 @@ def compare(old: dict, new: dict) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Generate or compare claude-seo release SHA-256 manifests."
+        description="Generate or compare codex-seo release SHA-256 manifests."
     )
     parser.add_argument(
         "--compare",

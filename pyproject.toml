@@ -1,18 +1,18 @@
 [project]
-name = "claude-seo"
+name = "codex-seo"
 version = "2.6.2"
-description = "Comprehensive SEO analysis skill for Claude Code"
+description = "Website SEO analysis toolkit for Codex and ChatGPT"
 requires-python = ">=3.11"
 license = "MIT"
 readme = "README.md"
 authors = [
   {name = "Daniel Agrici"}
 ]
-keywords = ["seo", "claude-code", "ai-tools", "schema-markup", "e-e-a-t", "geo"]
+keywords = ["seo", "openai-codex", "chatgpt", "ai-tools", "schema-markup", "e-e-a-t", "geo"]
 
 [project.urls]
-Homepage = "https://github.com/AgriciDaniel/claude-seo"
-Repository = "https://github.com/AgriciDaniel/claude-seo"
+Homepage = "https://github.com/helx0071/codex-seo/tree/codex-native-support#readme"
+Repository = "https://github.com/helx0071/codex-seo"
 
 [tool.ruff]
 target-version = "py311"

@@ -10,7 +10,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 def test_seo_audit_starts_with_render_page_auto() -> None:
     text = (REPO_ROOT / "skills" / "seo-audit" / "SKILL.md").read_text(encoding="utf-8")
     process = text[text.index("## Process"):text.index("## Crawl Configuration")]
-    assert '"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run render_page.py' in process
+    assert './scripts/codex-seo run render_page.py' in process
     assert "python3 scripts/render_page.py" not in process
     assert "--mode auto" in process
     assert "scripts/fetch_page.py` to retrieve HTML" not in process
@@ -71,17 +71,8 @@ def test_seo_audit_report_command_keeps_outputs_in_audit_dir() -> None:
     assert "--output-dir {domain}-audit/" in text
 
 
-def test_hub_invocation_keeps_the_command_word() -> None:
-    """Claude Code indexes skill arguments from 0. $1 is the second word (#342).
-
-    https://code.claude.com/docs/en/skills
-    $ARGUMENTS is the full input. $0 is the first argument, $1 the second.
-    An index with no argument stays literal, and ARGUMENTS is appended only
-    when no placeholder received a value. `/seo $1 $2` therefore drops `audit`
-    from `/seo audit https://example.com`.
-    """
+def test_hub_invocation_uses_the_codex_skill():
     text = (REPO_ROOT / "skills" / "seo" / "SKILL.md").read_text(encoding="utf-8")
     invocation = next(line for line in text.splitlines() if line.startswith("**Invocation:**"))
-    assert "$1" not in invocation
-    assert "$2" not in invocation
-    assert invocation.startswith("**Invocation:** `/seo $ARGUMENTS`")
+    assert "`$seo`" in invocation
+    assert "provide the action and arguments" in invocation

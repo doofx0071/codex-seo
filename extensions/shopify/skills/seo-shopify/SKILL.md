@@ -37,14 +37,18 @@ Business-type detection, subagent delegation, scoring and reports stay as
 
 | Command | Effect |
 |---|---|
-| `/seo shopify <url>` | Precheck, signed uncapped crawl, then the `seo-audit` pipeline on the artifacts |
-| `/seo shopify crawl <url>` | Crawl only, artifacts in `./crawl` |
-| `/seo shopify check <url>` | Report whether `.shopify-env` holds a valid signature for the host |
+| `$seo shopify <url>` | Precheck, signed uncapped crawl, then the `seo-audit` pipeline on the artifacts |
+| `$seo shopify crawl <url>` | Crawl only, artifacts in `./crawl` |
+| `$seo shopify check <url>` | Report whether `.shopify-env` holds a valid signature for the host |
 
 ## Step 1: decide the mode
 
+Keep the audited project as the working directory for the precheck and crawl.
+Use the quoted absolute path to the launcher in both commands. This keeps
+`.shopify-env` lookup and `./crawl` output relative to the audited project.
+
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run shopify_env.py precheck <url>
+"/absolute/path/to/codex-seo/scripts/codex-seo" run shopify_env.py precheck <url>
 ```
 
 Always exits 0 and always prints JSON. Read `mode`:
@@ -67,7 +71,7 @@ higher limits. Tell the user to copy the three values again from the Shopify adm
 ## Step 2: crawl
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run shopify_crawl.py <url> --out ./crawl
+"/absolute/path/to/codex-seo/scripts/codex-seo" run shopify_crawl.py <url> --out ./crawl
 ```
 
 No `--max-pages`. A signed crawl covers the complete sitemap; a cap applies only when

@@ -5,7 +5,7 @@ metadata:
   author: AgriciDaniel
   original_author: AlexMili
   version: "2.6.2"
-compatibility: "Requires the PostHog MCP server (https://mcp.posthog.com/mcp) connected to Claude Code. No local credentials are stored by this extension. The skill and agent ship with the claude-seo plugin; extensions/posthog/install.sh registers the MCP server and, on a manual install, also copies both."
+compatibility: "Requires an authenticated PostHog MCP connection in Codex."
 ---
 
 # seo-posthog
@@ -16,22 +16,19 @@ extension ships no script and stores no token.
 
 ## Prerequisites
 
-- The skill and the `seo-posthog` agent ship with the claude-seo plugin. Run
-  `extensions/posthog/install.sh` (or `install.ps1`) to register the MCP
-  server; on a manual install it also copies the skill and agent.
-- The PostHog MCP server connected and authenticated (`/mcp` in Claude Code).
+- Configure the PostHog MCP server in your Codex environment and authenticate it with read-only access.
 - The site sends `$pageview` events to PostHog (web snippet or SDK).
 
 ## Routing
 
 | Command | What it does |
 |---|---|
-| `/seo posthog check` | Confirm the PostHog MCP is connected and the project has `$pageview` events |
-| `/seo posthog organic` | Per-day organic search visits |
-| `/seo posthog top-pages` | Top organic landing pages |
-| `/seo posthog device` | Organic traffic by device type |
-| `/seo posthog country` | Organic traffic by country |
-| `/seo posthog referrers` | Referrer / channel breakdown |
+| `$seo posthog check` | Confirm the PostHog MCP is connected and the project has `$pageview` events |
+| `$seo posthog organic` | Per-day organic search visits |
+| `$seo posthog top-pages` | Top organic landing pages |
+| `$seo posthog device` | Organic traffic by device type |
+| `$seo posthog country` | Organic traffic by country |
+| `$seo posthog referrers` | Referrer / channel breakdown |
 
 Each command delegates to the `seo-posthog` agent, which runs HogQL queries
 through the MCP `exec` tool (`call execute-sql`). Options: days (default 28) and limit (default 50).
@@ -46,7 +43,7 @@ through the MCP `exec` tool (`call execute-sql`). Options: days (default 28) and
 
 ## Cross-skill delegation
 
-During `/seo audit`, the orchestrator spawns the `seo-posthog` agent when
+During `$seo audit`, the orchestrator spawns the `seo-posthog` agent when
 the PostHog MCP `exec` tool is available: `mcp__posthog__exec` when the server
 is registered in lowercase, as this extension's installer does, or
 `mcp__PostHog__exec` otherwise. Either spelling counts. It can run alongside

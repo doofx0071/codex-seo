@@ -77,7 +77,7 @@ DEFAULT_SAMPLE = 20
 MAX_EXAMPLES = 5
 # Distinct URLs remembered for duplicate detection (about 100 bytes each).
 MAX_TRACKED_URLS = 2_000_000
-USER_AGENT = "ClaudeSEO/2.2 SitemapDiscovery"
+USER_AGENT = "CodexSEO/2.2 SitemapDiscovery"
 _SITEMAP_LINE = re.compile(r"^\s*sitemap\s*:\s*(\S+)\s*$", re.IGNORECASE)
 _TOO_LARGE = "Sitemap exceeds the 50 MiB uncompressed protocol limit"
 _GZIP_MAGIC = b"\x1f\x8b"

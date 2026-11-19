@@ -1,58 +1,47 @@
 # PostHog extension setup
 
-This extension lets claude-seo use the PostHog MCP server as an analytics source,
+This extension lets codex-seo use the PostHog MCP server as an analytics source,
 the same way the Matomo extension uses the Matomo Reporting API. It stores no
 credentials: authentication belongs to the MCP server.
 
 > **Use read-only access.** The PostHog MCP `exec` tool can read data and also
 > create, update and delete PostHog objects (insights, dashboards, feature
-> flags and more). claude-seo only ever needs to read, and its read-only rule is
+> flags and more). codex-seo only ever needs to read, and its read-only rule is
 > an instruction to the agent, not a technical limit. Authenticate the MCP
 > server with a read-only scoped personal API key, or sign in as a member whose
 > access to the project is read-only, so a write cannot succeed.
 
-## 1. Install
+## Install
 
-```bash
+From the Codex SEO checkout with its [managed runtime](../../../docs/INSTALLATION.md) set up:
+
+```text
 ./extensions/posthog/install.sh
+# Windows PowerShell (Git Bash must be on PATH)
+.\extensions\posthog\install.ps1
 ```
 
-On Windows, run `.\extensions\posthog\install.ps1` in PowerShell.
+This registers the optional checkout skill under `.agents/skills/`. Open a new Codex session to discover it.
 
-The `seo-posthog` skill and agent ship with the claude-seo plugin, so on a
-plugin install the installer copies nothing; run it from the plugin or repository
-folder. On a manual install (`~/.claude/skills/seo`) it copies the skill to
-`~/.claude/skills/seo-posthog/` and the agent to `~/.claude/agents/seo-posthog.md`.
-In both cases it then offers to register the MCP server with `claude mcp add`.
-
-## 2. Connect the MCP server
-
-Manual equivalent:
+## Connect the MCP server
 
 ```bash
-claude mcp add --transport http posthog https://mcp.posthog.com/mcp
+codex mcp add posthog --url https://mcp.posthog.com/mcp
+codex mcp login posthog
+codex mcp list
 ```
 
-Then run `/mcp` inside Claude Code and authenticate, with the read-only login
-or key recommended above. For EU Cloud or self-hosted PostHog, use the matching
-MCP URL from the PostHog docs. Check the PostHog MCP documentation for the
-current URL, auth options and how to scope a key to read-only.
-
-The server exposes one tool, `exec`. Registered as `posthog` (the command
-above, and what the installer runs) it appears as `mcp__posthog__exec`;
-registered as `PostHog` it appears as `mcp__PostHog__exec`. The agent's `tools`
-allowlist and the audit orchestrator accept both spellings. Queries go through
-`call execute-sql {"query": "..."}`.
+Use a read-only account or equivalent scoped access. If you self-host, use your instance's MCP URL. Check the PostHog documentation for the authentication and permissions supported by your instance. Tools can be exposed as `mcp__posthog__exec` or `mcp__PostHog__exec`, depending on the server name.
 
 ## 3. Use
 
 ```
-/seo posthog check
-/seo posthog organic
-/seo posthog referrers
+$seo posthog check
+$seo posthog organic
+$seo posthog referrers
 ```
 
-During `/seo audit`, the agent is spawned when PostHog MCP tools are available.
+During `$seo audit`, the agent is spawned when PostHog MCP tools are available.
 
 ## Limits
 
@@ -65,10 +54,4 @@ During `/seo audit`, the agent is spawned when PostHog MCP tools are available.
 
 ## Uninstall
 
-```bash
-./extensions/posthog/uninstall.sh
-```
-
-On a manual install this removes the copied skill and agent. On a plugin install
-both stay, because the plugin provides them. The MCP server registration is not
-touched; remove it with `claude mcp remove posthog`.
+Run `./extensions/posthog/uninstall.sh` to remove the checkout skill entry. Remove your server registration with `codex mcp remove posthog`.

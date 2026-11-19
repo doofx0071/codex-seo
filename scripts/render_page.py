@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Shared headless renderer for claude-seo.
+Shared headless renderer for codex-seo.
 
 Every subagent that fetches HTML for analysis (technical, content, schema,
 geo, local, ecommerce, hreflang, images) calls this module instead of
@@ -95,8 +95,8 @@ ends on a blank, failed or refused page is an error with the raw fetch
 kept (``raw_fallback_available``). The limits are documented in
 SECURITY.md. Where the sandbox cannot start (Ubuntu 23.10 and later, most
 containers, root) the browser runs without it, with a warning on stderr and
-``sandbox: false``; ``CLAUDE_SEO_CHROMIUM_REQUIRE_SANDBOX=1`` makes that an
-error and ``CLAUDE_SEO_CHROMIUM_NO_SANDBOX=1`` skips the sandbox attempt.
+``sandbox: false``; ``CODEX_SEO_CHROMIUM_REQUIRE_SANDBOX=1`` makes that an
+error and ``CODEX_SEO_CHROMIUM_NO_SANDBOX=1`` skips the sandbox attempt.
 
 CLI
 ===
@@ -171,7 +171,7 @@ VIEWPORTS: dict[str, dict[str, int]] = {
 
 USER_AGENT = (
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/150.0.7871.115 Safari/537.36 ClaudeSEO/2.0"
+    "(KHTML, like Gecko) Chrome/150.0.7871.115 Safari/537.36 CodexSEO/2.0"
 )
 
 # Hydration-shell signatures. A marker is actionable only while meaningful
@@ -966,7 +966,7 @@ def _json_summary(result: dict, *, max_text: int = 0) -> dict:
 
 def _cli() -> None:
     parser = argparse.ArgumentParser(
-        description="claude-seo shared headless renderer (Playwright + trafilatura)"
+        description="codex-seo shared headless renderer (Playwright + trafilatura)"
     )
     parser.add_argument("url", help="URL to render")
     parser.add_argument(

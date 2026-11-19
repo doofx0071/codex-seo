@@ -93,13 +93,11 @@ def test_agent_refs_resolve_inside_an_extension_tree():
     """An extension-supplied agent is a live reference, not a dead one.
 
     ``seo-matomo`` ships only at ``extensions/matomo/agents/seo-matomo.md``
-    (no core mirror, unlike ``seo-dataforseo``). Its installer copies it into
-    ``~/.claude/agents/``, so the installers' ``agents/seo-matomo.md``
-    mentions must resolve. Before this rule was path-aware, all three Matomo
-    installer scripts were reported as dead agent refs.
+    (no core mirror, unlike ``seo-dataforseo``). References must resolve to
+    the checkout source prompt.
     """
     files = ["agents/seo-technical.md", "extensions/matomo/agents/seo-matomo.md"]
-    texts = ["extensions/matomo/install.sh"]
+    texts = ["extensions/matomo/docs/MATOMO-SETUP.md"]
     assert consistency_check.check_agent_refs(files, texts) == []
 
 

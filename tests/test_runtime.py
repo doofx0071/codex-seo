@@ -14,7 +14,7 @@ from types import SimpleNamespace
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-SPEC = importlib.util.spec_from_file_location("claude_seo_runtime", ROOT / "scripts/runtime.py")
+SPEC = importlib.util.spec_from_file_location("codex_seo_runtime", ROOT / "scripts/runtime.py")
 assert SPEC and SPEC.loader
 runtime = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(runtime)
@@ -24,9 +24,9 @@ def _fixture_root(tmp_path: Path) -> Path:
     root = tmp_path / "plugin root"
     (root / "scripts").mkdir(parents=True)
     (root / "extensions" / "banana" / "scripts").mkdir(parents=True)
-    (root / ".claude-plugin").mkdir()
+    (root / ".codex-plugin").mkdir()
     (root / "requirements.txt").write_text("requests>=2\n", encoding="utf-8")
-    (root / ".claude-plugin" / "plugin.json").write_text('{"version":"2.2.4"}\n', encoding="utf-8")
+    (root / ".codex-plugin" / "plugin.json").write_text('{"version":"2.2.4"}\n', encoding="utf-8")
     (root / "scripts" / "render_page.py").write_text("print('ok')\n", encoding="utf-8")
     (root / "extensions" / "banana" / "scripts" / "generate.py").write_text("print('ok')\n", encoding="utf-8")
     return root
@@ -60,12 +60,13 @@ def test_status_uses_plugin_data_and_hash_marker(tmp_path: Path, monkeypatch: py
     python = data / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
     python.parent.mkdir(parents=True)
     python.write_text("", encoding="utf-8")
-    monkeypatch.setenv("CLAUDE_PLUGIN_DATA", str(data))
+    monkeypatch.setenv("CODEX_SEO_PLUGIN_DATA", str(data))
     expected = runtime._expected(root)
     (data / "runtime-state.json").write_text(json.dumps({**expected, "browser_ready": True}), encoding="utf-8")
     status = runtime._status(root)
     assert status["ready"] is True
     assert status["mode"] == "plugin"
+    assert status["plugin_version"] == "2.2.4"
     (root / "requirements.txt").write_text("requests>=3\n", encoding="utf-8")
     assert runtime._status(root)["ready"] is False
 
@@ -75,12 +76,37 @@ def test_source_checkout_uses_repository_venv_without_plugin_environment(
 ) -> None:
     root = _fixture_root(tmp_path)
     (root / ".git").mkdir()
-    monkeypatch.delenv("CLAUDE_PLUGIN_DATA", raising=False)
-    monkeypatch.delenv("CLAUDE_PLUGIN_ROOT", raising=False)
-    monkeypatch.delenv("CLAUDE_SEO_DATA_DIR", raising=False)
+    monkeypatch.delenv("CODEX_SEO_PLUGIN_DATA", raising=False)
+    monkeypatch.delenv("CODEX_SEO_PLUGIN_ROOT", raising=False)
+    monkeypatch.delenv("CODEX_SEO_DATA_DIR", raising=False)
     data_dir, mode = runtime._data_dir(root)
     assert data_dir == root
     assert mode == "manual"
+
+
+def test_data_override_takes_precedence_over_plugin_data(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = _fixture_root(tmp_path)
+    override = tmp_path / "override"
+    monkeypatch.setenv("CODEX_SEO_DATA_DIR", str(override))
+    monkeypatch.setenv("CODEX_SEO_PLUGIN_DATA", str(tmp_path / "plugin-data"))
+    assert runtime._data_dir(root) == (override.resolve(), "override")
+
+
+def test_plugin_fallback_uses_codex_seo_data_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = _fixture_root(tmp_path)
+    monkeypatch.delenv("CODEX_SEO_DATA_DIR", raising=False)
+    monkeypatch.delenv("CODEX_SEO_PLUGIN_DATA", raising=False)
+    monkeypatch.delenv("CODEX_SEO_PLUGIN_ROOT", raising=False)
+    monkeypatch.setattr(runtime.sys, "platform", "linux")
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
+    assert runtime._data_dir(root) == ((tmp_path / "data" / "codex-seo").resolve(), "plugin-fallback")
+    (root / ".git").mkdir()
+    monkeypatch.setenv("CODEX_SEO_PLUGIN_ROOT", str(root))
+    assert runtime._data_dir(root)[1] == "plugin-fallback"
 
 
 def test_doctor_json_omits_paths_and_environment_values(
@@ -89,7 +115,7 @@ def test_doctor_json_omits_paths_and_environment_values(
     root = _fixture_root(tmp_path)
     sensitive_path = tmp_path / "person-name" / "private"
     monkeypatch.setattr(runtime, "_root", lambda: root)
-    monkeypatch.setenv("CLAUDE_PLUGIN_DATA", str(sensitive_path))
+    monkeypatch.setenv("CODEX_SEO_PLUGIN_DATA", str(sensitive_path))
     rc = runtime.command_doctor(SimpleNamespace(json=True))
     output = capsys.readouterr().out
     payload = json.loads(output)
@@ -157,7 +183,7 @@ def test_version_only_change_does_not_stale_environment(tmp_path: Path, monkeypa
     python = data / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
     python.parent.mkdir(parents=True)
     python.write_text("", encoding="utf-8")
-    monkeypatch.setenv("CLAUDE_PLUGIN_DATA", str(data))
+    monkeypatch.setenv("CODEX_SEO_PLUGIN_DATA", str(data))
     expected = runtime._expected(root)
     expected["plugin_version"] = "2.2.2"
     (data / "runtime-state.json").write_text(json.dumps(expected), encoding="utf-8")
@@ -184,7 +210,7 @@ def test_browser_marker_requires_browser_files(tmp_path: Path, monkeypatch: pyte
     python = data / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
     python.parent.mkdir(parents=True)
     python.write_text("", encoding="utf-8")
-    monkeypatch.setenv("CLAUDE_PLUGIN_DATA", str(data))
+    monkeypatch.setenv("CODEX_SEO_PLUGIN_DATA", str(data))
     expected = runtime._expected(root)
     (data / "runtime-state.json").write_text(
         json.dumps({**expected, "browser_ready": True}), encoding="utf-8"
@@ -208,7 +234,7 @@ def test_setup_restores_previous_environment_when_staged_swap_fails(
     (data / "runtime-state.json").write_text(
         json.dumps(runtime._expected(root)), encoding="utf-8"
     )
-    monkeypatch.setenv("CLAUDE_PLUGIN_DATA", str(data))
+    monkeypatch.setenv("CODEX_SEO_PLUGIN_DATA", str(data))
     monkeypatch.setattr(runtime, "_root", lambda: root)
 
     def fake_checked(argv: list[str], *, env: dict[str, str], stage: str) -> subprocess.CompletedProcess[str]:
@@ -245,7 +271,7 @@ def _setup_with_previous_environment(
     old_python.parent.mkdir(parents=True)
     old_python.write_text("old", encoding="utf-8")
     (final / "old-sentinel").write_text("keep", encoding="utf-8")
-    monkeypatch.setenv("CLAUDE_PLUGIN_DATA", str(data))
+    monkeypatch.setenv("CODEX_SEO_PLUGIN_DATA", str(data))
     monkeypatch.setattr(runtime, "_root", lambda: root)
 
     def fake_checked(argv: list[str], *, env: dict[str, str], stage: str) -> subprocess.CompletedProcess[str]:
@@ -332,7 +358,7 @@ def test_run_propagates_child_signal(tmp_path: Path, monkeypatch: pytest.MonkeyP
 
 # Scripts run without an --extension flag are dispatched straight from the
 # core scripts/ directory, so they must be listed in ALLOWED_CORE_SCRIPTS or
-# `claude-seo run` refuses them at runtime, even though the SKILL.md/agent
+# `codex-seo run` refuses them at runtime, even though the SKILL.md/agent
 # instructions look correct. This regression was caught by hand for
 # keywordseverywhere_api.py (SKILL.md wired it up, ALLOWED_CORE_SCRIPTS did
 # not list it) -- this test makes sure the next one doesn't ship silently.
@@ -363,7 +389,7 @@ def test_every_skill_invoked_script_is_runtime_allowlisted() -> None:
                     missing.append(f"{rel}: {script}")
     assert not missing, (
         "scripts invoked from SKILL.md/agent instructions but missing from "
-        "ALLOWED_CORE_SCRIPTS in scripts/runtime.py (claude-seo run would "
+        "ALLOWED_CORE_SCRIPTS in scripts/runtime.py (codex-seo run would "
         "refuse them): " + "; ".join(missing)
     )
 
@@ -414,7 +440,7 @@ def test_successful_stage_returns_the_completed_process(monkeypatch: pytest.Monk
 
 def test_redaction_covers_repr_quoted_home(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(runtime.Path, "home", classmethod(lambda cls: Path(r"C:\Users\someone")))
-    quoted = repr(r"C:\Users\someone\.claude\skills\seo\.venv.next-1\Scripts\python.exe")
+    quoted = repr(r"C:\Users\someone\codex-seo\.venv.next-1\Scripts\python.exe")
     nested = repr(f"sys.path = [{quoted}]")
     redacted = runtime._redact(
         f"Command '[{quoted}, '-c', {nested}]' returned non-zero exit status 1.\n"
@@ -439,7 +465,7 @@ def test_browser_setup_warning_is_redacted(
     (data / "runtime-state.json").write_text(
         json.dumps(runtime._expected(root)), encoding="utf-8"
     )
-    monkeypatch.setenv("CLAUDE_PLUGIN_DATA", str(data))
+    monkeypatch.setenv("CODEX_SEO_PLUGIN_DATA", str(data))
     monkeypatch.setattr(runtime, "_root", lambda: root)
     fake_home = tmp_path / "home" / "someone"
     monkeypatch.setattr(runtime.Path, "home", classmethod(lambda cls: fake_home))

@@ -5,24 +5,27 @@ a time-series: the complement to SE Ranking's on-demand sampling.
 
 ## Install
 
-```bash
-./extensions/profound/install.sh        # Linux / macOS
-.\extensions\profound\install.ps1       # Windows
+From the Codex SEO checkout with its [managed runtime](../../../docs/INSTALLATION.md) set up:
+
+```text
+./extensions/profound/install.sh
+# Windows PowerShell (Git Bash must be on PATH)
+.\extensions\profound\install.ps1
 ```
 
-Stores `PROFOUND_API_KEY` in `~/.claude/settings.json` env block, mode 0o600.
+This registers the optional checkout skill under `.agents/skills/`. Open a new Codex session to discover it.
+
+Set `PROFOUND_API_KEY` in your Codex launch environment. Use a provider account with read-only access for audits.
 
 ## Verify
 
 ```
-/seo profound citations "Claude SEO"
+$seo profound citations "Codex SEO"
 ```
 
 ## Uninstall
 
-```bash
-./extensions/profound/uninstall.sh
-```
+Run `./extensions/profound/uninstall.sh` to remove the checkout skill entry. Remove `PROFOUND_API_KEY` from the environment you configured.
 
 ## When to use Profound vs. SE Ranking
 

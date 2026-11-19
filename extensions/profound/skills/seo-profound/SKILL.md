@@ -3,7 +3,7 @@ name: seo-profound
 description: Profound LLM citation tracker (extension). Time-series brand citation rates across ChatGPT, Perplexity, and other LLMs. Pairs with seo-seranking for triangulated AI visibility coverage.
 metadata:
   version: "2.6.2"
-compatibility: "Requires a Profound API key (set PROFOUND_API_KEY by running extensions/profound/install.sh)."
+compatibility: "Requires PROFOUND_API_KEY in the Codex runtime environment."
 ---
 
 # seo-profound
@@ -15,18 +15,18 @@ are first-class.
 
 ## Prerequisites
 
-- Run `extensions/profound/install.sh` or `install.ps1`.
+- Configure the Profound API key using the [setup guide](../../docs/PROFOUND-SETUP.md).
 - Profound API key.
-- Before any tool call, check `~/.claude/settings.json` has `env.PROFOUND_API_KEY`.
+- Before any tool call, check whether `PROFOUND_API_KEY` is available in the Codex runtime environment.
 
 ## Routing
 
 | Command | Purpose |
 |---|---|
-| `/seo profound citations <brand>` | Current citation rate per LLM + 30-day trend |
-| `/seo profound prompts <brand>` | Top prompts that surface (or fail to surface) the brand |
-| `/seo profound competitors <brand>` | Brands cited alongside `brand` for the same prompts |
-| `/seo profound alerts <brand>` | Spike/drop alerts vs. 7-day baseline |
+| `$seo profound citations <brand>` | Current citation rate per LLM + 30-day trend |
+| `$seo profound prompts <brand>` | Top prompts that surface (or fail to surface) the brand |
+| `$seo profound competitors <brand>` | Brands cited alongside `brand` for the same prompts |
+| `$seo profound alerts <brand>` | Spike/drop alerts vs. 7-day baseline |
 
 ## Output conventions
 

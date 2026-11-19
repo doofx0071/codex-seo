@@ -5,14 +5,17 @@ competitors) plus AI Share-of-Voice across 5 AI platforms.
 
 ## Install
 
-```bash
-./extensions/seranking/install.sh        # Linux / macOS
-.\extensions\seranking\install.ps1       # Windows
+From the Codex SEO checkout with its [managed runtime](../../../docs/INSTALLATION.md) set up:
+
+```text
+./extensions/seranking/install.sh
+# Windows PowerShell (Git Bash must be on PATH)
+.\extensions\seranking\install.ps1
 ```
 
-The installer prompts for an API key (hidden input), copies
-`SKILL.md` into `~/.claude/skills/seo-seranking/`, and writes
-`env.SERANKING_API_KEY` into `~/.claude/settings.json` with mode 0o600.
+This registers the optional checkout skill under `.agents/skills/`. Open a new Codex session to discover it.
+
+Set `SERANKING_API_KEY` in the environment that starts Codex. Confirm any plan charges before invoking a provider query.
 
 ## Get an API key
 
@@ -22,7 +25,7 @@ endpoint costs ~5 units per query (1 per platform).
 ## Verify
 
 ```
-/seo seranking ai-visibility "Claude SEO"
+$seo seranking ai-visibility "Codex SEO"
 ```
 
 Expected output: percentages per platform (ChatGPT, Gemini, Perplexity,
@@ -30,11 +33,8 @@ AI Overviews, AI Mode) with sample-size confidence notes.
 
 ## Rotate key
 
-Re-run the installer; it overwrites `env.SERANKING_API_KEY` atomically
-(tempfile + replace) without touching other settings.
+Replace `SERANKING_API_KEY` in the environment that launches Codex, then open a new session.
 
 ## Uninstall
 
-```bash
-./extensions/seranking/uninstall.sh
-```
+Run `./extensions/seranking/uninstall.sh` to remove the checkout skill entry. Remove `SERANKING_API_KEY` from the environment you configured.

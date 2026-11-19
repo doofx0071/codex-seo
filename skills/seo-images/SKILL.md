@@ -64,7 +64,7 @@ Recommend WebP/AVIF over JPEG/PNG. Check for `<picture>` element with format fal
 Many sites serve WebP or AVIF from a `.jpg`/`.png` URL when the browser asks for it (WordPress WebP
 plugins such as EWWW, ShortPixel, WebP Express and Imagify, Cloudflare Polish, image CDNs). The extension
 is not the format visitors receive. Run
-`"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run parse_html.py --url <url> --probe-images --json`,
+`./scripts/codex-seo run parse_html.py --url <url> --probe-images --json`,
 which fetches each image with a browser `Accept` header and adds to every image entry (for a lazy-loaded image it probes `resolved_src`, the real source, because `src` is then a placeholder):
 
 | Field | Meaning |
@@ -126,7 +126,7 @@ Third-party reporting and Wikipedia describe a Rust-based JPEG XL decoder as shi
 
 #### Detected lazy-loader methods (`lazy_method` field)
 
-`"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run parse_html.py` classifies each image's lazy-loading mechanism via the
+`./scripts/codex-seo run parse_html.py` classifies each image's lazy-loading mechanism via the
 `lazy_method` field on every image entry. Five values:
 
 | `lazy_method` | Signal detected | Common stack |
@@ -219,7 +219,7 @@ Sorted by file size impact (largest savings first):
 
 When DataForSEO MCP is available, enhance the image audit with competitive data.
 
-### `/seo images serp <keyword>`
+### `$seo images serp <keyword>`
 
 Cross-reference on-page images with the image results visible in the Google SERP.
 
@@ -250,7 +250,7 @@ If DataForSEO MCP is not available, inform user and suggest installing the exten
 
 Optimize image files for SEO: format conversion, metadata injection, compression.
 
-### `/seo images optimize <path>`
+### `$seo images optimize <path>`
 
 Optimize image file(s) for web and SEO. Converts to WebP/AVIF, injects IPTC
 metadata, compresses, and generates responsive variants.
@@ -343,13 +343,13 @@ https://support.google.com/merchants/answer/14743464
 
 ```bash
 # Audit a directory for the IPTC label (counts: missing, ai, captured, etc.)
-"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run iptc_ai_label.py audit ./images/ --json
+./scripts/codex-seo run iptc_ai_label.py audit ./images/ --json
 
 # Audit a single image
-"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run iptc_ai_label.py audit ./hero.webp --json
+./scripts/codex-seo run iptc_ai_label.py audit ./hero.webp --json
 
 # Inject the AI label into an image
-"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run iptc_ai_label.py inject ./ai-hero.webp \
+./scripts/codex-seo run iptc_ai_label.py inject ./ai-hero.webp \
     --source-type trainedAlgorithmicMedia
 
 # Other vocabulary values:
@@ -401,7 +401,7 @@ Google extracts these IPTC `DigitalSourceType` values:
 > text alone. No new published image-SEO lever yet; keep descriptive alt text +
 > clean structured data.
 
-When `/seo images optimize` is run on AI-generated assets, prompt the user to
+When `$seo images optimize` is run on AI-generated assets, prompt the user to
 confirm the source type and inject the matching IPTC value automatically.
 
 For **AI-generated product titles and descriptions**, Google Merchant Center

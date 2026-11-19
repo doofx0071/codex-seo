@@ -1,4 +1,4 @@
-# Prompt Engineering Reference: Claude Banana
+# Prompt Engineering Reference: Nano Banana
 
 > Load this on-demand when constructing complex prompts or when the user
 > asks about prompt techniques. Do NOT load at startup.

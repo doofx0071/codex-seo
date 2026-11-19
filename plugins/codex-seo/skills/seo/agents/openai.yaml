@@ -1,0 +1,11 @@
+{
+  "interface": {
+    "display_name": "SEO",
+    "short_description": "Evidence-backed SEO audits",
+    "default_prompt": "Use $seo to audit this website. Cite observable evidence, prioritize fixes, and label unavailable measurements."
+  },
+  "policy": {
+    "allow_implicit_invocation": true,
+    "products": ["CHAT", "CODEX"]
+  }
+}

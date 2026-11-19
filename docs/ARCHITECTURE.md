@@ -2,14 +2,16 @@
 
 ## Overview
 
-Claude SEO follows Anthropic's official Claude Code skill specification with a modular, multi-skill architecture.
+Codex SEO uses a repo-local skill, scoped specialist agents, and a managed local runtime. The portable ChatGPT and Codex plugin ships a skill and reference material for use with the host tools.
 
 ## Directory Structure
 
-The plugin ships 29 sub-skills (22 core + 1 orchestrator + 1 framework integration + 5 extension mirrors) and 20 sub-agents (16 core + 1 framework integration + 3 extension mirrors).
+The checkout has 29 source skill guides and 20 specialist role prompts. Codex discovers the project entry point in `.agents/skills/seo/` and the TOML roles in `.codex/agents/`.
 
 ```
-~/.claude/plugins/.../claude-seo/
+codex-seo/
+├── .agents/skills/seo/      # Codex skill entry point
+├── .codex/agents/          # Native role configuration
 ├── skills/
 │   ├── seo/                    # Main orchestrator
 │   │   ├── SKILL.md
@@ -89,17 +91,36 @@ Instructions and documentation...
 
 ### Subagents
 
-Subagents are specialized workers that can be delegated tasks. They have their own context and tools.
+Core Codex agents are configured as project-scoped TOML files in
+`.codex/agents/`. Each file sets the agent name, description, optional model
+and reasoning level, and developer instructions. Core role Markdown under
+`agents/` contains the specialist guidance; each TOML config points to its role
+prompt. Provider extensions can also include role Markdown under
+`extensions/*/agents/` for inline use after that provider is available; those
+files are not automatically Codex agents.
 
-**Agent Format:**
-```yaml
+Codex agents inherit the parent session's permission policy and MCP servers.
+Markdown prompt text does not grant a tool allowlist. Use the parent sandbox
+and approval policy for permissions, and native Codex capability settings when
+a supported tool must be disabled.
+
+**`.codex/agents/seo-technical.toml` format:**
+```toml
+name = "seo-technical"
+description = "Analyze crawlability, indexing, redirects, security, URL structure, rendering, mobile, and technical SEO risks."
+model = "gpt-6.2-sol"
+model_reasoning_effort = "high"
+developer_instructions = "Read agents/seo-technical.md and its relevant guide."
+```
+
+**Role Markdown format:**
+```markdown
 ---
-name: agent-name
-description: What this agent does.
-tools: Read, Bash, Write, Glob, Grep
+name: seo-technical
+description: Analyze crawlability and technical SEO risks.
 ---
 
-Instructions for the agent...
+See `agents/seo-technical.md` for the specialist task instructions and safety rules.
 ```
 
 ### Reference Files
@@ -108,7 +129,7 @@ Reference files contain static data loaded on-demand to avoid bloating the main 
 
 ## Orchestration Flow
 
-### Full Audit (`/seo audit`)
+### Full Audit (`$seo audit`)
 
 ```
 User request
@@ -154,7 +175,7 @@ User request
 ### Individual Command
 
 ```
-User Request (e.g., /seo page)
+User Request (e.g., $seo page)
     │
     ▼
 ┌─────────────────┐
@@ -217,7 +238,7 @@ User Request (e.g., /seo page)
 ### Adding a New Subagent
 
 1. Create `agents/seo-newagent.md`
-2. Add YAML frontmatter with name, description, tools
+2. Add the native role to `.codex/agents/`
 3. Write agent instructions
 4. Reference from relevant skills
 
@@ -230,29 +251,23 @@ User Request (e.g., /seo page)
 
 ### Managed Python runtime
 
-Bundled tools are dispatched through `scripts/claude-seo` and
-`scripts/runtime.py`, never through a working-directory-relative Python command.
+The `scripts/codex-seo` launcher dispatches bundled tools through
+`scripts/runtime.py` in the managed environment.
 The launcher resolves a Python in the supported range (3.11 to 3.14, set by
-`MIN_PYTHON` and `MAX_PYTHON` in `runtime.py`): `CLAUDE_SEO_PYTHON` if set,
+`MIN_PYTHON` and `MAX_PYTHON` in `runtime.py`): `CODEX_SEO_PYTHON` if set,
 then the default interpreter if it is in range, then the newest versioned one.
 The standard-library runtime provides three operations: `run`, `setup`, and
 read-only `doctor`.
 
-The launcher lives in `scripts/` beside `runtime.py`, which it resolves as a
-sibling. A top-level `bin/` directory is not allowed: the claude.ai-hosted
-marketplace rejects such a plugin with `marketplace_sync_bin_directory_not_allowed`.
-Skills and agents therefore call the launcher by its plugin-relative path,
-`"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run <script.py>`, which Claude Code
-expands in skill body content, in `allowed-tools` Bash rules, and as an
-environment variable for hook processes. The quoting keeps the command correct
-when the plugin root contains spaces. Manual installers (`install.sh`,
-`install.ps1`) copy the launcher to `~/.claude/skills/seo/scripts/claude-seo`
-and rewrite that canonical token to the absolute path in every Markdown file
-they install, because a manual install has no plugin root.
+From the repository root, run `./scripts/codex-seo run <script.py>`. From
+another directory, use the quoted absolute path to the checkout's launcher.
+The launcher resolves `runtime.py` next to itself in either case.
 
-Plugin environments live under persistent `CLAUDE_PLUGIN_DATA`. Manual installs
-keep the compatible `~/.claude/skills/seo/.venv` location. A state marker records
-the runtime schema, requirements SHA-256, Python major and minor version, public
+For a Git checkout, the default environment is `.venv` in the repository
+root. `CODEX_SEO_DATA_DIR` overrides the runtime state directory.
+`CODEX_SEO_PLUGIN_DATA` supplies the plugin state directory, while
+`CODEX_SEO_PLUGIN_ROOT` alone selects the platform's fallback storage.
+A state marker records the runtime schema, requirements SHA-256, Python major and minor version, public
 plugin version, and browser state. Requirements, runtime-schema, or Python ABI
 changes require explicit setup; a version-only difference remains compatible and
 is refreshed on the next setup. Environment replacement is staged and rolled
@@ -382,9 +397,6 @@ extensions/
 ### Extension Convention
 
 1. Self-contained in `extensions/<name>/`
-2. Own `install.sh` (and `install.ps1` where Windows is supported) that copies files and configures MCP (where applicable)
-3. Own `uninstall.sh` (and `uninstall.ps1` where present) that reverses installation
-4. Installs the sub-skill mirror to the plugin's skill directory
-5. Installs the sub-agent mirror to the plugin's agent directory (extensions that ship one; lighter extensions are skill-only)
-6. MCP extensions merge their server entry into `~/.claude.json` non-destructively (PostHog uses `claude mcp add`); API-key extensions write only their `env` keys or their own config file
-7. MCP server versions are pinned (`@<version>`) for supply-chain stability
+2. Its installer registers an optional checkout skill entry under `.agents/skills/`.
+3. Its uninstaller removes the registered checkout entry.
+4. Configure provider credentials and MCP separately as described in [provider setup](MCP-INTEGRATION.md).

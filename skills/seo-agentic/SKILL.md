@@ -26,36 +26,37 @@ explains Google's Lighthouse **Agentic Browsing** result.
 **The framing that survives every standards outcome:** agent readiness is
 accessibility plus performance plus access policy, with a Markdown and
 discovery layer on top. WebMCP is an optional enhancement for sites with forms
-or transactions, not a foundation (WebKit opposes it, Mozilla is neutral, and
-only ChatGPT desktop calls tools by default).
+or transactions, not a foundation. Tool availability varies by host and user
+configuration, so assess the target site's browser-visible experience instead
+of assuming every agent can call page tools.
 
 ## Commands
 
 | Command | What it does |
 |---|---|
-| `/seo agentic <url>` | Full agent-readiness audit (default mode) |
-| `/seo agentic lighthouse <url or file.json>` | Explain the Lighthouse Agentic Browsing X/N result |
-| `/seo agentic fix <url>` | Draft fixes: robots.txt Content-Signal, llms.txt, ai-catalog.json, WebMCP |
-| `/seo agentic refresh` | Re-verify the dated facts in `references/vendor-matrix.md` |
+| `$seo agentic <url>` | Full agent-readiness audit (default mode) |
+| `$seo agentic lighthouse <url or file.json>` | Explain the Lighthouse Agentic Browsing X/N result |
+| `$seo agentic fix <url>` | Draft fixes: robots.txt Content-Signal, llms.txt, ai-catalog.json, WebMCP |
+| `$seo agentic refresh` | Re-verify the dated facts in `references/vendor-matrix.md` |
 
 ## Audit process
 
 Run the steps in this order and keep every tool's JSON for the report.
 
 1. **Lighthouse fraction.**
-   `"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run lighthouse_agentic.py <url> --strategy both --json`.
+   `./scripts/codex-seo run lighthouse_agentic.py <url> --strategy both --json`.
    Uses PSI v5 (`category=AGENTIC_BROWSING`); a Google API key avoids the
    shared anonymous quota. With a saved report use `--from-json <file>`.
    Report the fraction as `X/N` exactly as computed. Never convert it to a
    percentage and never assume N: it is at most 6, and N/A and informative
    audits drop out. Read `references/lighthouse-agentic-category.md` before explaining it.
 2. **HTTP and markup checks.**
-   `"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run agentic_check.py <url> --json`.
+   `./scripts/codex-seo run agentic_check.py <url> --json`.
    Covers server-rendered content, robots.txt groups per AI agent and
    Content-Signal, llms.txt, Markdown delivery, ai-catalog.json, `/.well-known`
    documents, and WebMCP markup.
 3. **Accessibility tree.**
-   `"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run agent_ux_check.py <url> --json`.
+   `./scripts/codex-seo run agent_ux_check.py <url> --json`.
    A local 0-100 heuristic; present it separately from the Lighthouse fraction.
    Page-level criteria: `references/agent-friendly-pages.md`.
 4. **WAF behaviour (only with authorization).** Add `--ua-matrix` to step 2
@@ -119,10 +120,10 @@ are listed as options either way.
 Drafts go to stdout for review; nothing is deployed and no file is overwritten.
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run agentic_fix.py robots <url> --signal "search=yes, ai-input=yes, ai-train=no"
-"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run agentic_fix.py llms <url>
-"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run agentic_fix.py ai-catalog --publisher example.com --entry "Name|media type|url"
-"${CLAUDE_PLUGIN_ROOT}/scripts/claude-seo" run agentic_fix.py webmcp <url> --json
+./scripts/codex-seo run agentic_fix.py robots <url> --signal "search=yes, ai-input=yes, ai-train=no"
+./scripts/codex-seo run agentic_fix.py llms <url>
+./scripts/codex-seo run agentic_fix.py ai-catalog --publisher example.com --entry "Name|media type|url"
+./scripts/codex-seo run agentic_fix.py webmcp <url> --json
 ```
 
 - `robots` adds Content-Signal to each group and never changes Allow or
@@ -148,7 +149,7 @@ Drafts go to stdout for review; nothing is deployed and no file is overwritten.
 - State the Lighthouse version and test date with every fraction; WebMCP
   audits depend on the testing browser.
 - For any vendor fact, use `references/vendor-matrix.md` and keep its source
-  grade. If a row is older than 60 days, say so or run `/seo agentic refresh`.
+  grade. If a row is older than 60 days, say so or run `$seo agentic refresh`.
 
 ## Refresh mode
 
@@ -164,7 +165,7 @@ version changes, and the `CHECKED_ON` constant in `agentic_check.py` together.
   not a command.
 - Every request goes through `url_safety` (SSRF and DNS-rebinding guards). For
   a local or staging host, the operator names it in
-  `CLAUDE_SEO_LOCAL_TARGETS` (see `seo-technical`).
+  `CODEX_SEO_LOCAL_TARGETS` (see `seo-technical`).
 - Never print API keys; `lighthouse_agentic.py` reads the key from the shared
   Google config and redacts it from errors.
 
@@ -186,11 +187,11 @@ version changes, and the `CHECKED_ON` constant in `agentic_check.py` together.
 
 | Scenario | Action |
 |---|---|
-| PSI quota exceeded or no key | Say so, suggest configuring a Google API key (`/seo google setup`), and continue with steps 2 and 3. Offer a local run: `npx lighthouse@latest <url> --only-categories=agentic-browsing --output=json`, then `--from-json`. |
-| Agent-UX `score_status: unavailable` (no Chromium) | Report the heuristic as unavailable and rely on Lighthouse `agent-accessibility-tree` for the tree. Use `html_findings` (when `html_only_fallback` is true) only if `server-rendered` passed; on a client-rendered page they describe the empty app shell. Suggest `/seo setup` for Chromium. |
+| PSI quota exceeded or no key | Say so, suggest configuring a Google API key (`$seo google setup`), and continue with steps 2 and 3. Offer a local run: `npx lighthouse@latest <url> --only-categories=agentic-browsing --output=json`, then `--from-json`. |
+| Agent-UX `score_status: unavailable` (no Chromium) | Report the heuristic as unavailable and rely on Lighthouse `agent-accessibility-tree` for the tree. Use `html_findings` (when `html_only_fallback` is true) only if `server-rendered` passed; on a client-rendered page they describe the empty app shell. Suggest `$seo setup` for Chromium. |
 | Static WebMCP count differs from Lighthouse | `registerTool_call_sites` counts call sites, not tools. Report the Lighthouse `webmcp-registered-tools` list as the tool count. |
 | No agentic-browsing category in a saved report | The report predates Lighthouse 13.2; rerun with a current version. |
 | WebMCP audits N/A | The testing browser lacked WebMCP support, or the page registers nothing. Not a defect. |
 | robots.txt answers 429 (`robots-reachable` evidence `inconclusive: true`) | The rules were not read. Report robots.txt as not tested, never as "no robots.txt" or "all allowed", and rerun later. |
 | Site blocks the audit fetcher | Report the status and headers; do not retry with spoofed agent user agents unless step 4's authorization applies. |
-| URL blocked by url_safety | Explain the SSRF guard; for a host the user controls, see `CLAUDE_SEO_LOCAL_TARGETS`. |
+| URL blocked by url_safety | Explain the SSRF guard; for a host the user controls, see `CODEX_SEO_LOCAL_TARGETS`. |
