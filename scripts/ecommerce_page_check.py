@@ -17,10 +17,8 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 from bs4 import BeautifulSoup
-
 from parse_html import parse_html
 from schema_ecommerce_validate import validate
-
 
 _HIDDEN_CLASSES = {"sr-only", "screen-reader-text", "screen-reader-only", "visually-hidden", "visuallyhidden",
                    "hidden", "d-none", "opacity-0"}
