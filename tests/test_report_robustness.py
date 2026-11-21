@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import struct
 import sys
+import warnings
 from pathlib import Path
 
 import pytest
@@ -127,6 +128,23 @@ def test_long_crux_and_history_labels_keep_charts_small(tmp_path: Path) -> None:
     for name in ("cwv_distributions.png", "cwv_timeline.png"):
         width, height = _png_size(tmp_path / "charts" / name)
         assert width < 4000 and height < 4000, (name, width, height)
+
+
+def test_long_distribution_label_does_not_break_layout_or_expand_chart(tmp_path: Path) -> None:
+    data = {
+        "crux": {"metrics": {"largest_contentful_paint": {
+            "label": "W" * 2000,
+            "distribution": {"good": 70, "needs_improvement": 20, "poor": 10},
+        }}}
+    }
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        path = google_report.chart_cwv_distributions(data, tmp_path)
+
+    layout_warnings = [warning for warning in caught if "Tight layout not applied" in str(warning.message)]
+    assert not layout_warnings, [str(warning.message) for warning in layout_warnings]
+    width, height = _png_size(Path(path))
+    assert width < 2500 and height < 1200, (width, height)
 
 
 def test_a_failing_chart_is_dropped_and_the_report_is_still_written(

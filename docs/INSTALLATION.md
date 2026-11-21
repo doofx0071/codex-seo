@@ -5,9 +5,11 @@
 1. Clone and open the checkout in Codex.
 
    ```bash
-   git clone --branch codex-native-support https://github.com/helx0071/codex-seo.git
+   git clone --branch main https://github.com/helx0071/codex-seo.git
    cd codex-seo
    ```
+
+   The current release review is being prepared from `codex-native-support`; use that branch when checking the open review. After its merge, `main` is the installation branch.
 
 2. Select `$seo` and ask `audit https://example.com`. Codex reads `.agents/skills/seo/SKILL.md` and discovers the specialist roles in `.codex/agents/` when the project config is loaded.
 3. For script-backed checks, install Python 3.11 to 3.14 and Bash. On Windows use Git Bash or WSL and install a Python interpreter accessible from that shell.

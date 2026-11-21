@@ -12,9 +12,11 @@ Audit websites and web projects in Codex or ChatGPT. Codex SEO covers crawlabili
 ## Run from a Codex checkout
 
 ```bash
-git clone --branch codex-native-support https://github.com/helx0071/codex-seo.git
+git clone --branch main https://github.com/helx0071/codex-seo.git
 cd codex-seo
 ```
+
+The current release review is being prepared from `codex-native-support`; use that branch when checking the open review. After its merge, `main` is the installation branch.
 
 Open the checkout in Codex. Codex discovers the `$seo` skill under `.agents/skills/seo/` and the project-scoped specialist agents in `.codex/agents/`. Try these prompts:
 
@@ -44,4 +46,4 @@ See [migration notes](docs/MIGRATION-v1-to-v2.md) for an existing checkout and [
 
 ## Credits and license
 
-Codex SEO is a fork of [AgriciDaniel/claude-seo](https://github.com/AgriciDaniel/claude-seo). See [CONTRIBUTORS.md](CONTRIBUTORS.md) for author and community attribution and [LICENSE](LICENSE) for the MIT copyright and permission notice.
+Codex SEO is an independently maintained project derived and adapted from [AgriciDaniel/claude-seo](https://github.com/AgriciDaniel/claude-seo). See [CONTRIBUTORS.md](CONTRIBUTORS.md) for original-author and community attribution and [LICENSE](LICENSE) for the MIT copyright and permission notice.

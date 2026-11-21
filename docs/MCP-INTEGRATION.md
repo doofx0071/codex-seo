@@ -34,4 +34,6 @@ If Codex is already running, restart it from an environment that has the require
 
 The Google setup guide covers API key and OAuth tiers. Search Console and Analytics reports require a verified property or appropriate permissions. PageSpeed Insights delivers lab results, while CrUX delivers field measurements where the data is available. Treat unmeasured checks as unavailable.
 
+For Google API key authentication in HTTP integrations, send the key in the `X-Goog-Api-Key` request header. Keep keys out of request URLs, logs, and shared configuration examples.
+
 Use the least privilege the provider supports. Ask before spending credits, generating paid assets, writing to a provider, or submitting URLs for indexing. An extension's uninstall script removes its checkout skill entry. Remove its MCP entry separately with `codex mcp remove <server-name>` and clear any environment variables or tokens you configured.

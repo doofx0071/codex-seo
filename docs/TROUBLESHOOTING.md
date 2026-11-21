@@ -167,7 +167,7 @@ Confirm the relevant `.codex/agents/seo-*.toml` file exists and the project conf
 
 ## Getting help
 
-Use [fork issues](https://github.com/helx0071/codex-seo/issues) for reproducible problems and include redacted Codex output.
+Use [project issues](https://github.com/helx0071/codex-seo/issues) for reproducible problems and include redacted Codex output.
 
 ## Debug Mode
 

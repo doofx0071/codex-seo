@@ -6,6 +6,8 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import struct
+import zlib
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from urllib.parse import unquote, urlsplit
@@ -15,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / "plugins" / "codex-seo"
 SKILL_PATH = Path("skills/seo")
 SKILL_FILES = {Path("SKILL.md"), Path("agents/openai.yaml")}
+ICON_FILES = {Path("assets/logo.png"), Path("assets/composer-icon.png")}
 SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
 MARKDOWN_LINK = re.compile(
     r"\]\(\s*(?:<([^>\n]+)>|([^\s)]+))"
@@ -90,13 +93,53 @@ def require_text(mapping: dict, *fields: str) -> None:
             raise ValueError(f"Expected a nonblank string for {field}")
 
 
+def validate_png(path: Path, data: bytes, minimum_size: int) -> None:
+    """Validate a complete square PNG icon against public package limits."""
+    if len(data) > 5 * 1024 * 1024:
+        raise ValueError(f"PNG icon exceeds 5 MiB: {path.as_posix()}")
+    if not data.startswith(b"\x89PNG\r\n\x1a\n"):
+        raise ValueError(f"Expected PNG image: {path.as_posix()}")
+    cursor = 8
+    width = height = None
+    found_idat = found_iend = False
+    while cursor + 12 <= len(data):
+        length = struct.unpack_from(">I", data, cursor)[0]
+        chunk_type = data[cursor + 4:cursor + 8]
+        chunk_end = cursor + 12 + length
+        if chunk_end > len(data):
+            raise ValueError(f"Truncated PNG image: {path.as_posix()}")
+        chunk_data = data[cursor + 8:cursor + 8 + length]
+        expected_crc = struct.unpack_from(">I", data, cursor + 8 + length)[0]
+        if zlib.crc32(chunk_type + chunk_data) & 0xFFFFFFFF != expected_crc:
+            raise ValueError(f"Invalid PNG chunk checksum: {path.as_posix()}")
+        if cursor == 8:
+            if chunk_type != b"IHDR" or length != 13:
+                raise ValueError(f"Invalid PNG header: {path.as_posix()}")
+            width, height = struct.unpack_from(">II", chunk_data)
+        elif chunk_type == b"IDAT":
+            found_idat = True
+        elif chunk_type == b"IEND":
+            if length != 0:
+                raise ValueError(f"Invalid PNG end chunk: {path.as_posix()}")
+            found_iend = True
+            cursor = chunk_end
+            break
+        cursor = chunk_end
+    if not found_idat or not found_iend or cursor != len(data):
+        raise ValueError(f"Incomplete PNG image: {path.as_posix()}")
+    if width is None or height is None or width != height:
+        raise ValueError(f"PNG icon must be square: {path.as_posix()}")
+    if width < minimum_size or width > 4096:
+        raise ValueError(f"PNG icon dimensions out of range: {path.as_posix()}")
+
+
 def validate_metadata(manifest_bytes: bytes, skill_files: dict[Path, bytes]) -> None:
     manifest = json.loads(manifest_bytes)
     if set(manifest) != {
         "$schema", "name", "version", "description", "author", "repository",
         "license", "keywords", "extensions",
-    } or (manifest["$schema"], manifest["name"], manifest["version"]) != (SCHEMA, "codex-seo", "0.1.0"):
-        raise ValueError("Invalid Phase 1 plugin manifest")
+    } or (manifest["$schema"], manifest["name"], manifest["version"]) != (SCHEMA, "codex-seo", "0.1.2"):
+        raise ValueError("Invalid Codex SEO 0.1.2 plugin manifest")
     require_text(manifest, "description", "repository", "license")
     require_text(manifest["author"], "name")
     if not isinstance(manifest["keywords"], list) or any(
@@ -109,9 +152,16 @@ def validate_metadata(manifest_bytes: bytes, skill_files: dict[Path, bytes]) -> 
     interface = extensions["com.openai"]["interface"]
     if set(interface) != {
         "displayName", "shortDescription", "longDescription", "developerName", "category", "defaultPrompt",
+        "privacyPolicyURL", "supportURL", "logo", "composerIcon",
     }:
-        raise ValueError("Unexpected OpenAI interface fields")
+        raise ValueError("Expected the documented OpenAI privacy policy URL field")
     require_text(interface, *interface)
+    if interface["privacyPolicyURL"] != "https://github.com/helx0071/codex-seo/blob/main/PRIVACY.md":
+        raise ValueError("Unexpected OpenAI privacy policy URL")
+    if interface["supportURL"] != "https://github.com/helx0071/codex-seo/issues":
+        raise ValueError("Unexpected OpenAI support URL")
+    if interface["logo"] != "./assets/logo.png" or interface["composerIcon"] != "./assets/composer-icon.png":
+        raise ValueError("OpenAI logo and composer icon must use the contained PNG package assets")
     if interface["displayName"] != "Codex SEO" or interface["category"] != "Data & Analytics":
         raise ValueError("Unexpected plugin display name or category")
     if len(interface["shortDescription"]) > 30:
@@ -186,11 +236,14 @@ def read_package(package: Path, boundary: Path) -> dict[Path, bytes]:
         for path, data in files.items()
         if path.is_relative_to(SKILL_PATH)
     }
+    expected_files = {Path("plugin.json"), *(SKILL_PATH / path for path in skill_files), *ICON_FILES}
     if manifest is None or not SKILL_FILES <= skill_files.keys():
         raise ValueError("Package needs a root plugin.json, one SEO skill and agents/openai.yaml")
-    if len(files) != len(skill_files) + 1 or not all(map(skill_file_allowed, skill_files)):
-        raise ValueError("Unexpected files in the skills-only plugin")
+    if set(files) != expected_files or not all(map(skill_file_allowed, skill_files)):
+        raise ValueError("Unexpected files in the skills-only plugin or a required icon is missing")
     validate_metadata(manifest, skill_files)
+    for relative, minimum_size in ((Path("assets/logo.png"), 256), (Path("assets/composer-icon.png"), 48)):
+        validate_png(relative, files[relative], minimum_size)
     validate_references(package / SKILL_PATH, skill_files)
     return files
 

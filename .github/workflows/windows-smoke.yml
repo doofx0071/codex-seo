@@ -2,7 +2,7 @@ name: Windows checkout smoke
 
 on:
   pull_request:
-    branches: [codex-native-support]
+    branches: [codex-native-support, main]
     paths:
       - 'scripts/**'
       - 'extensions/**'

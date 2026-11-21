@@ -18,6 +18,7 @@ import json
 import os
 import re
 import sys
+import textwrap
 from datetime import datetime
 from html import escape
 from pathlib import Path
@@ -279,7 +280,10 @@ def chart_cwv_distributions(data: dict, output_dir: Path) -> str:
         if not m or "distribution" not in m:
             continue
         d = m["distribution"]
-        labels.append(_chart_text(m.get("label", name)))
+        label = _chart_text(m.get("label", name))
+        labels.append("\n".join(textwrap.wrap(
+            label, width=24, break_long_words=True, break_on_hyphens=False,
+        )))
         goods.append(d.get("good", 0))
         nis.append(d.get("needs_improvement", 0))
         poors.append(d.get("poor", 0))

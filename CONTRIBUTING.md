@@ -4,7 +4,7 @@ Report reproducible bugs in [GitHub Issues](https://github.com/helx0071/codex-se
 
 ## Development
 
-Fork the repository and branch from `codex-native-support`. Run the checks in [Phase 1 verification](docs/PHASE1-VERIFICATION.md) from your checkout. Follow the [Code of Conduct](CODE_OF_CONDUCT.md) in project discussions.
+Fork this Codex SEO project and branch from `main` after the current release review merges. The current review is being prepared from `codex-native-support`. Run the checks in [Phase 1 verification](docs/PHASE1-VERIFICATION.md) from your checkout. Follow the [Code of Conduct](CODE_OF_CONDUCT.md) in project discussions.
 
 - Put project skill entry points in `.agents/skills/` and shared workflow detail in `skills/`.
 - Define Codex specialist roles in `.codex/agents/` and keep reusable prompts in `agents/`.
@@ -12,4 +12,4 @@ Fork the repository and branch from `codex-native-support`. Run the checks in [P
 - Keep optional provider setup in `extensions/` and make requests read-only unless the user explicitly authorizes a write.
 - Preserve MIT notices, contributor credits, upstream source references and SEO crawler records.
 
-Open a pull request against `codex-native-support` with a concise description and the checks you ran. Use mock or public fixtures and report checks you could not run.
+Open a pull request against `main` after the current release review merges. The current release review's source branch is `codex-native-support`. Include a concise description and the checks you ran. Use mock or public fixtures and report checks you could not run.

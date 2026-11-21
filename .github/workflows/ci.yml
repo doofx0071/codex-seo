@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [codex-native-support]
+    branches: [codex-native-support, main]
   pull_request:
-    branches: [codex-native-support]
+    branches: [codex-native-support, main]
 
 permissions:
   contents: read

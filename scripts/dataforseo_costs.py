@@ -26,10 +26,12 @@ Security fixes: config path corrected to ~/.config/codex-seo/
 """
 
 import argparse
+import errno
 import json
 import os
 import sys
 import tempfile
+import time
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -170,9 +172,17 @@ def _lock(handle, exclusive):
         fcntl.flock(handle, fcntl.LOCK_EX if exclusive else fcntl.LOCK_SH)
     elif msvcrt is not None:
         # msvcrt has no shared mode, so readers take an exclusive lock too.
-        # LK_LOCK retries 10 times at 1s intervals, then raises OSError.
+        # LK_LOCK has a bounded retry count, which can expire when many
+        # processes contend. Retry non-blocking lock conflicts like flock.
         handle.seek(0)
-        msvcrt.locking(handle.fileno(), msvcrt.LK_LOCK, 1)
+        while True:
+            try:
+                msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+                break
+            except OSError as exc:
+                if exc.errno not in (errno.EACCES, errno.EDEADLK):
+                    raise
+                time.sleep(0.01)
     else:
         raise LedgerError(
             "No file-locking primitive available (neither fcntl nor msvcrt). "

@@ -8,4 +8,6 @@ Label page-source, response-header, and indexing findings as **observed**, **mea
 
 For the selected product, collection, and category templates, compare titles and merchandising content, product variants, canonical strategy, faceted navigation, product images, internal links, indexability indicators, and breadcrumbs. Match Product or ProductGroup, Offer, and variant IDs to published page facts. Check price, currency, availability, seller, and review data against the visible page.
 
+The checkout-only `ecommerce_page_check.py` can compare visible HTML evidence with Product/Offer JSON-LD without network access. It uses explicit microdata and a bounded text fallback for one visible Offer scope. Currency symbols alone are ambiguous, and source inspection cannot determine computed CSS or JavaScript-driven visibility; confirm those cases in a browser.
+
 Review any user-provided merchant or marketplace export independently. Do not estimate rankings, sellers, visibility, or feed health from a product page. A publicly supplied commerce profile may be examined passively when relevant. Apply [product evidence checks](../topics/product-evidence.md).

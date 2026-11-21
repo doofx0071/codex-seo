@@ -5,10 +5,12 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import struct
 import subprocess
 import sys
 import tempfile
 import unittest
+import zlib
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -44,18 +46,41 @@ def copy_fixture(root: Path) -> None:
         shutil.copy2(SCRIPTS / name, root / "scripts" / name)
 
 
+def set_png_dimensions(path: Path, width: int, height: int) -> None:
+    data = bytearray(path.read_bytes())
+    data[16:24] = struct.pack(">II", width, height)
+    data[29:33] = struct.pack(">I", zlib.crc32(b"IHDR" + data[16:29]) & 0xFFFFFFFF)
+    path.write_bytes(data)
+
+
 class TestPluginPackage(unittest.TestCase):
     def test_manifest_metadata_and_product_policy(self) -> None:
         manifest = json.loads((PACKAGE / "plugin.json").read_bytes())
         self.assertTrue({"skills", "mcpServers", "apps", "interface"}.isdisjoint(manifest))
         self.assertEqual(manifest["$schema"], "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json")
         self.assertEqual(manifest["name"], "codex-seo")
-        self.assertEqual(manifest["version"], "0.1.0")
+        self.assertEqual(manifest["version"], "0.1.2")
         self.assertEqual(set(manifest["extensions"]["com.openai"]), {"interface"})
         interface = manifest["extensions"]["com.openai"]["interface"]
         self.assertEqual(interface["displayName"], "Codex SEO")
         self.assertEqual(interface["category"], "Data & Analytics")
+        self.assertEqual(interface["logo"], "./assets/logo.png")
+        self.assertEqual(interface["composerIcon"], "./assets/composer-icon.png")
+        self.assertEqual(
+            interface["privacyPolicyURL"],
+            "https://github.com/helx0071/codex-seo/blob/main/PRIVACY.md",
+        )
+        self.assertEqual(interface["supportURL"], "https://github.com/helx0071/codex-seo/issues")
         self.assertTrue(0 < len(interface["shortDescription"]) <= 30)
+
+        privacy = (ROOT / "PRIVACY.md").read_text(encoding="utf-8")
+        for required_notice in (
+            "Skills-only plugin privacy listing addendum", "Information and purpose", "Recipients",
+            "Retention", "User controls", "https://github.com/helx0071/codex-seo/issues",
+            "host-selected browsing or search provider", "accessed public site",
+            "those services' terms apply",
+        ):
+            self.assertIn(required_notice, privacy)
 
         skill_text = (SKILL / "SKILL.md").read_text(encoding="utf-8")
         opening, frontmatter, body = skill_text.split("---", 2)
@@ -115,11 +140,68 @@ class TestPluginPackage(unittest.TestCase):
                     [name for name in archive.namelist() if name.endswith(("/SKILL.md", "plugin.json"))],
                     ["plugin.json", "skills/seo/SKILL.md"],
                 )
+                self.assertIn("assets/logo.png", archive.namelist())
+                self.assertIn("assets/composer-icon.png", archive.namelist())
                 self.assertTrue(all(not entry.is_dir() for entry in archive.infolist()))
             second = output.with_name("repeat.zip")
             rebuilt = run_script("build_plugin.py", "--output", second)
             self.assertEqual(rebuilt.returncode, 0, rebuilt.stderr)
             self.assertEqual(output.read_bytes(), second.read_bytes())
+
+    def test_build_rejects_invalid_png_icon(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            copy_fixture(root)
+            icon = root / PACKAGE.relative_to(ROOT) / "assets" / "logo.png"
+            icon.write_bytes(b"not a png")
+            output = root / "plugin.zip"
+            built = run_script("build_plugin.py", "--output", output, root=root)
+            self.assertNotEqual(built.returncode, 0)
+            self.assertIn("PNG", built.stderr)
+
+    def test_build_rejects_non_square_icon(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            copy_fixture(root)
+            icon = root / PACKAGE.relative_to(ROOT) / "assets" / "logo.png"
+            set_png_dimensions(icon, 1253, 1254)
+            built = run_script("build_plugin.py", "--output", root / "plugin.zip", root=root)
+            self.assertNotEqual(built.returncode, 0)
+            self.assertIn("must be square", built.stderr)
+
+    def test_build_rejects_undersized_logo(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            copy_fixture(root)
+            icon = root / PACKAGE.relative_to(ROOT) / "assets" / "logo.png"
+            set_png_dimensions(icon, 128, 128)
+            built = run_script("build_plugin.py", "--output", root / "plugin.zip", root=root)
+            self.assertNotEqual(built.returncode, 0)
+            self.assertIn("dimensions out of range", built.stderr)
+
+    def test_build_rejects_undersized_composer_icon(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            copy_fixture(root)
+            icon = root / PACKAGE.relative_to(ROOT) / "assets" / "composer-icon.png"
+            set_png_dimensions(icon, 32, 32)
+            built = run_script("build_plugin.py", "--output", root / "plugin.zip", root=root)
+            self.assertNotEqual(built.returncode, 0)
+            self.assertIn("dimensions out of range", built.stderr)
+
+    def test_build_rejects_uncontained_icon_paths(self) -> None:
+        for field in ("logo", "composerIcon"):
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                copy_fixture(root)
+                package = root / PACKAGE.relative_to(ROOT)
+                manifest_path = package / "plugin.json"
+                manifest = json.loads(manifest_path.read_bytes())
+                manifest["extensions"]["com.openai"]["interface"][field] = "../logo.png"
+                manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+                built = run_script("build_plugin.py", "--output", root / "plugin.zip", root=root)
+                self.assertNotEqual(built.returncode, 0)
+                self.assertIn("contained PNG package assets", built.stderr)
 
     def test_build_rejects_archive_inside_package(self) -> None:
         output = PACKAGE / "unexpected.zip"

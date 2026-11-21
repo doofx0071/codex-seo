@@ -97,6 +97,64 @@ def test_matches_variant_by_explicit_identity():
     assert result["comparisons"]["amount"]["status"] == "match"
 
 
+def test_selected_value_and_visible_label_pointing_to_different_variants_is_ambiguous():
+    blue = {"@type": "Product", "name": "Blue / 8", "sku": "BLUE-8",
+            "offers": {"@type": "Offer", "price": "89.99", "priceCurrency": "USD"}}
+    black = {"@type": "Product", "name": "Black / 8", "sku": "BLACK-8",
+             "offers": {"@type": "Offer", "price": "99.99", "priceCurrency": "USD"}}
+    schema = {"@context": "https://schema.org", "@type": "ProductGroup", "name": "Trail Shoe",
+              "hasVariant": [blue, black]}
+    html = page('<h1>Trail Shoe</h1><select><option selected value="BLACK-8">Blue / 8</option></select>', schema)
+
+    result = check_page(html)
+
+    assert result["visible_facts"]["selected_variant"] == {"status": "available", "value": "Blue / 8"}
+    assert result["comparisons"]["selected_variant"]["status"] == "ambiguous"
+    assert result["comparisons"]["selected_variant"]["schema"] is None
+    for fact in ("amount", "currency", "availability"):
+        assert result["comparisons"][fact]["status"] == "ambiguous"
+        assert result["comparisons"][fact]["schema"] is None
+
+
+def test_selected_value_associates_variant_but_label_compares_to_display_name():
+    variant = {"@type": "Product", "name": "Black / 8", "sku": "BLACK-8",
+               "offers": {"@type": "Offer", "price": "99.99", "priceCurrency": "USD"}}
+    schema = {"@context": "https://schema.org", "@type": "ProductGroup", "name": "Trail Shoe",
+              "hasVariant": [variant]}
+    html = page('<h1>Trail Shoe</h1><select><option selected value="BLACK-8">Black / 8</option></select>', schema)
+
+    result = check_page(html)
+
+    assert result["visible_facts"]["selected_variant"] == {"status": "available", "value": "Black / 8"}
+    assert result["comparisons"]["selected_variant"]["status"] == "match"
+    assert result["comparisons"]["selected_variant"]["schema"] == "Black / 8"
+
+
+def test_selected_value_associates_offer_when_custom_label_matches_no_variant_name():
+    variant = {"@type": "Product", "name": "Black / 8", "sku": "BLACK-8",
+               "offers": {"@type": "Offer", "price": "99.99", "priceCurrency": "USD",
+                          "availability": "https://schema.org/InStock"}}
+    schema = {"@context": "https://schema.org", "@type": "ProductGroup", "name": "Trail Shoe",
+              "hasVariant": [variant]}
+    html = page('<h1>Trail Shoe</h1><select><option selected value="BLACK-8">Green / 10</option></select>'
+                '<span itemprop="price">89.99</span><span itemprop="priceCurrency">CAD</span>'
+                '<section itemprop="offers"><p>Out of stock</p></section>', schema)
+
+    result = check_page(html)
+
+    assert result["visible_facts"]["selected_variant"] == {"status": "available", "value": "Green / 10"}
+    assert result["comparisons"]["selected_variant"] == {
+        "status": "conflict", "visible": "Green / 10", "schema": "Black / 8",
+        "evidence": "Visible selected option label compared with the associated variant display name.",
+    }
+    assert result["comparisons"]["amount"]["status"] == "conflict"
+    assert result["comparisons"]["amount"]["schema"] == "99.99"
+    assert result["comparisons"]["currency"]["status"] == "conflict"
+    assert result["comparisons"]["currency"]["schema"] == "USD"
+    assert result["comparisons"]["availability"]["status"] == "conflict"
+    assert result["comparisons"]["availability"]["schema"] == "InStock"
+
+
 def test_reads_root_list_and_graph_jsonld():
     entity = product(price="89.99", priceCurrency="USD")
     html = page('<h1>Trail Shoe</h1><span itemprop="price" content="89.99">89.99</span>'
@@ -240,4 +298,47 @@ def test_comma_decimal_price_is_not_normalized_as_thousands():
 
     assert result["visible_facts"]["amount"]["status"] in {"unavailable", "ambiguous"}
     assert result["visible_facts"]["amount"]["value"] != "8999"
+    assert result["comparisons"]["amount"]["status"] != "match"
+
+
+def test_numeric_amount_comparison_ignores_equivalent_decimal_formatting():
+    for visible, schema in (("89", "89.00"), ("99.0", "99.00")):
+        result = check_page(page(f'<h1>Trail Shoe</h1><section itemprop="offers"><span itemprop="price">{visible}</span></section>',
+                                 product(price=schema, priceCurrency="USD")))
+        assert result["comparisons"]["amount"]["status"] == "match"
+        assert result["comparisons"]["amount"]["visible"] == visible
+        assert result["comparisons"]["amount"]["schema"] == schema
+
+
+def test_currency_symbol_alone_is_ambiguous_currency_evidence():
+    result = check_page(page('<h1>Trail Shoe</h1><section itemprop="offers"><span itemprop="price">$89.00</span></section>',
+                             product(price="89.00", priceCurrency="USD")))
+    assert result["visible_facts"]["amount"] == {"status": "available", "value": "89.00"}
+    assert result["visible_facts"]["currency"]["status"] in {"ambiguous", "unavailable"}
+    assert result["comparisons"]["currency"]["status"] != "match"
+
+
+def test_hidden_css_classes_do_not_supply_visible_price():
+    for hidden in ('class="hidden"', 'class="d-none"', 'style="opacity: 0"',
+                   'style="opacity: 0.00"', 'style="opacity: 0.000"',
+                   'style="opacity: +0.00 !important"', 'style="opacity: -0.000"',
+                   'style="display: none"',
+                   'style="visibility: hidden"', 'aria-hidden="true"'):
+        html = page(f'<h1>Trail Shoe</h1><section itemprop="offers"><span {hidden} itemprop="price">89</span></section>',
+                    product(price="89", priceCurrency="USD"))
+        assert check_page(html)["visible_facts"]["amount"]["status"] == "unavailable"
+
+
+def test_extracts_unambiguous_plain_text_price_in_single_offer_scope():
+    result = check_page(page('<h1>Trail Shoe</h1><section itemprop="offers">Price: $89.00 USD</section>',
+                             product(price="89.00", priceCurrency="USD")))
+    assert result["visible_facts"]["amount"] == {"status": "available", "value": "89.00"}
+    assert result["visible_facts"]["currency"] == {"status": "available", "value": "USD"}
+    assert result["comparisons"]["amount"]["status"] == "match"
+
+
+def test_plain_numeric_identifier_is_not_treated_as_offer_price():
+    result = check_page(page('<h1>Trail Shoe</h1><section itemprop="offers">SKU 89 in stock</section>',
+                             product(price="89", priceCurrency="USD")))
+    assert result["visible_facts"]["amount"]["status"] == "unavailable"
     assert result["comparisons"]["amount"]["status"] != "match"

@@ -13,6 +13,7 @@ import argparse
 import json
 import re
 import sys
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 from bs4 import BeautifulSoup
@@ -21,7 +22,11 @@ from parse_html import parse_html
 from schema_ecommerce_validate import validate
 
 
-_HIDDEN_CLASSES = {"sr-only", "screen-reader-text", "screen-reader-only", "visually-hidden", "visuallyhidden"}
+_HIDDEN_CLASSES = {"sr-only", "screen-reader-text", "screen-reader-only", "visually-hidden", "visuallyhidden",
+                   "hidden", "d-none", "opacity-0"}
+_ISO_CURRENCY = re.compile(r"\b[A-Z]{3}\b")
+_PRICE_TEXT = re.compile(r"(?<![\w.,])(?:[$€£¥]\s*)?(\d+(?:\.\d{1,2})?)(?:\s+([A-Z]{3}))?(?![\w.,])", re.I)
+_CSS_NUMBER = re.compile(r"^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$", re.I)
 _AVAILABILITY = {
     "InStock": ("in stock", "available now", "available to order", "ships now"),
     "OutOfStock": ("out of stock", "sold out", "unavailable"),
@@ -33,6 +38,21 @@ _NEGATED_AVAILABILITY = re.compile(
     r"(?:in stock|available(?: now| to order)?|out of stock|sold out|unavailable)\b"
 )
 _PLACEHOLDER_VARIANT = re.compile(r"^(?:choose|select|please select)(?:\s+(?:a|an|your))?\b", re.I)
+
+
+def _has_zero_opacity(style: str) -> bool:
+    for declaration in style.split(";"):
+        property_name, separator, raw_value = declaration.partition(":")
+        if not separator or property_name.strip().lower() != "opacity":
+            continue
+        value = re.sub(r"\s*!important\s*$", "", raw_value.strip(), flags=re.I)
+        if _CSS_NUMBER.fullmatch(value):
+            try:
+                if Decimal(value) == 0:
+                    return True
+            except InvalidOperation:
+                continue
+    return False
 
 
 def _visible(element) -> bool:
@@ -47,7 +67,8 @@ def _visible(element) -> bool:
         if classes & _HIDDEN_CLASSES:
             return False
         style = re.sub(r"\s+", "", str(parent.get("style", "")).lower())
-        if "display:none" in style or "visibility:hidden" in style:
+        if ("display:none" in style or "visibility:hidden" in style
+                or _has_zero_opacity(str(parent.get("style", "")))):
             return False
     return True
 
@@ -73,7 +94,7 @@ def _visible_facts(html: str) -> dict:
     prices: list[str] = []
     currencies: list[str] = []
     availability_text: list[str] = []
-    skus: list[str] = []
+    ambiguous_currency_symbol = False
     for element in soup.find_all(attrs={"itemprop": True}):
         if not _visible(element):
             continue
@@ -90,16 +111,45 @@ def _visible_facts(html: str) -> dict:
             if len(numeric) == 1:
                 prices.append(numeric[0].replace(",", ""))
         if "pricecurrency" in props:
-            currencies.append(text)
-        if "sku" in props or "productid" in props:
-            skus.append(text)
-
+            codes = _ISO_CURRENCY.findall(text.upper())
+            currencies.extend(codes)
+            if not codes:
+                ambiguous_currency_symbol = True
+    selected_values: list[str] = []
+    selected_labels: list[str] = []
     for option in soup.select("select option[selected]"):
         if _visible(option):
             selected_label = option.get_text(" ", strip=True)
             if selected_label and not _PLACEHOLDER_VARIANT.match(selected_label):
-                skus.append(selected_label)
-    selected_variant = _one(skus)
+                selected_labels.append(selected_label)
+                value = str(option.get("value", "")).strip()
+                if value:
+                    selected_values.append(value)
+    selected_variant = _one(selected_labels)
+
+    # Without microdata, inspect only one explicit visible Offer scope. This
+    # bounded text fallback avoids borrowing prices from recommendations or
+    # unrelated page content.
+    if not prices:
+        offer_scopes = [el for el in soup.find_all(True) if _visible(el) and
+                        ("offers" in {str(x).lower() for x in ((el.get("itemprop", []) or [])
+                                                                  if isinstance(el.get("itemprop", []), list)
+                                                                  else str(el.get("itemprop", "")).split())}
+                         or "offer" in str(el.get("itemtype", "")).lower())]
+        if len(offer_scopes) == 1:
+            text = " ".join(str(node).strip() for node in offer_scopes[0].find_all(string=True)
+                            if str(node).strip() and _visible(node.parent))
+            matches = list(_PRICE_TEXT.finditer(text))
+            if len(matches) == 1:
+                match = matches[0]
+                price_label = re.search(r"\bprice\b", text[max(0, match.start() - 32):match.start()], re.I)
+                explicit_currency = bool(match.group(2) or re.search(r"[$€£¥]", match.group(0)))
+                if price_label or explicit_currency:
+                    prices.append(match.group(1))
+                if match.group(2):
+                    currencies.append(match.group(2).upper())
+                elif re.search(r"[$€£¥]", match.group(0)):
+                    ambiguous_currency_symbol = True
 
     availability_value = None
     if not availability_text:
@@ -157,7 +207,8 @@ def _visible_facts(html: str) -> dict:
     return {
         "identity": identity,
         "amount": _one(prices),
-        "currency": _one(currencies),
+        "currency": (_one(currencies) if currencies else
+                      _fact(None, "ambiguous") if ambiguous_currency_symbol else _fact()),
         "availability": availability,
         "selected_variant": selected_variant,
     }
@@ -198,7 +249,14 @@ def _comparison(visible: dict, schema_value, evidence: str) -> dict:
     elif schema_value is None:
         status = "unavailable"
     else:
-        status = "match" if str(visible["value"]).casefold() == str(schema_value).casefold() else "conflict"
+        left, right = str(visible["value"]), str(schema_value)
+        if evidence.startswith("Visible amount"):
+            try:
+                status = "match" if Decimal(left) == Decimal(right) else "conflict"
+            except InvalidOperation:
+                status = "conflict"
+        else:
+            status = "match" if left.casefold() == right.casefold() else "conflict"
     return {"status": status, "visible": visible["value"], "schema": schema_value, "evidence": evidence}
 
 
@@ -210,15 +268,26 @@ def check_page(html: str, page_url: str = "") -> dict:
     visible = _visible_facts(html)
 
     selected = visible["selected_variant"]["value"] if visible["selected_variant"]["status"] == "available" else None
+    soup = BeautifulSoup(html, "html.parser")
+    selected_values = [str(option.get("value", "")).strip() for option in soup.select("select option[selected]")
+                       if _visible(option) and str(option.get("value", "")).strip()
+                       and not _PLACEHOLDER_VARIANT.match(option.get_text(" ", strip=True))]
+    association_key = selected_values[0] if len(set(selected_values)) == 1 else None
     identity = visible["identity"]["value"] if visible["identity"]["status"] == "available" else None
     candidates = products
-    if selected:
-        matched = [p for p in products if selected.casefold() in {
+    variant_association_ambiguous = len(set(selected_values)) > 1
+    if association_key:
+        matched = [p for p in products if association_key.casefold() in {
             str(p.get("sku", "")).strip().casefold(), str(p.get("productID", "")).strip().casefold(),
-            str(p.get("name", "")).strip().casefold(),
         }]
         if matched:
             candidates = matched
+            label_points_elsewhere = any(
+                p is not matched[0] and isinstance(p.get("name"), str)
+                and p["name"].strip().casefold() == str(selected or "").strip().casefold()
+                for p in products
+            ) if len(matched) == 1 else False
+            variant_association_ambiguous = variant_association_ambiguous or label_points_elsewhere
         else:
             candidates = []
     elif identity:
@@ -247,13 +316,13 @@ def check_page(html: str, page_url: str = "") -> dict:
             if isinstance(raw_variant, str) and raw_variant.strip():
                 schema_variant = raw_variant.strip()
                 break
-        if isinstance(candidates[0].get("name"), str) and candidates[0]["name"].strip().casefold() == str(selected or "").strip().casefold():
+        if isinstance(candidates[0].get("name"), str) and candidates[0]["name"].strip():
             schema_variant = candidates[0]["name"].strip()
 
     comparisons = {}
     schema_for = {"identity": schema_identity, "selected_variant": schema_variant, **schema_values}
     for field in ("identity", "selected_variant", "amount", "currency", "availability"):
-        if len(candidates) > 1 or (len(candidates) == 1 and len(offers) > 1):
+        if variant_association_ambiguous or len(candidates) > 1 or (len(candidates) == 1 and len(offers) > 1):
             comparisons[field] = {"status": "ambiguous", "visible": visible[field]["value"], "schema": None,
                                   "evidence": "Multiple Product or Offer candidates have no unambiguous visible identity."}
         elif not candidates and products:
@@ -262,7 +331,7 @@ def check_page(html: str, page_url: str = "") -> dict:
         else:
             evidence = ("Visible product identity compared with the associated Product or ProductGroup."
                         if field == "identity" else
-                        "Visible selected variant compared with the associated Product identifier."
+                        "Visible selected option label compared with the associated variant display name."
                         if field == "selected_variant" else
                         f"Visible {field} compared with the associated Product Offer.")
             comparisons[field] = _comparison(visible[field], schema_for[field], evidence)

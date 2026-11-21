@@ -44,6 +44,17 @@ Fetch and parse any product page for on-page SEO quality.
 3. Analyze product-specific signals (below)
 ```
 
+For a local product-fact comparison, save the raw or rendered page HTML and
+run `./scripts/codex-seo run ecommerce_page_check.py <local-html>`. This
+checkout-only checker runs offline and compares deterministic visible facts
+with their associated Product/Offer JSON-LD. Hidden or ambiguous evidence is
+reported as unavailable or ambiguous. It reads visible price/availability
+microdata and can extract one unambiguous price plus an adjacent supported
+currency code from a single visible Offer scope. Symbol-only currencies are
+ambiguous because `$`, for example, does not identify an ISO currency. The
+checker reads HTML source, not computed browser styles or live variant state;
+when layout CSS or JavaScript controls visibility, verify in a browser.
+
 ### Store Discovery and Sample Selection
 
 When given a store or domain rather than a product URL, first follow relevant

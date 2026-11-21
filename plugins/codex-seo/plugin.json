@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "codex-seo",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Audit websites and web projects with observable SEO evidence and a prioritized action plan.",
   "author": { "name": "Codex SEO contributors" },
   "repository": "https://github.com/helx0071/codex-seo",
@@ -15,7 +15,11 @@
         "longDescription": "Review technical SEO, content, structured data and AI search readiness using the evidence available in your session. Get prioritized fixes and see which measurements still need data.",
         "developerName": "Codex SEO contributors",
         "category": "Data & Analytics",
-        "defaultPrompt": "Audit this website and give me a prioritized SEO action plan. Cite what you could verify."
+        "defaultPrompt": "Audit this website and give me a prioritized SEO action plan. Cite what you could verify.",
+        "privacyPolicyURL": "https://github.com/helx0071/codex-seo/blob/main/PRIVACY.md",
+        "supportURL": "https://github.com/helx0071/codex-seo/issues",
+        "logo": "./assets/logo.png",
+        "composerIcon": "./assets/composer-icon.png"
       }
     }
   }

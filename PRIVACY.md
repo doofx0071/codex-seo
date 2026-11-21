@@ -89,3 +89,27 @@ you have one set for the `gh` CLI.
 - API keys and OAuth tokens are stored locally in `~/.config/codex-seo/`, in the `CODEX_SEO_PROFILE_DIR` directory, or in environment variables
 - Credentials are never committed to the repository (blocked by `.gitignore`)
 - OAuth tokens use refresh tokens and never store client secrets in token files
+
+## Skills-only plugin privacy listing addendum
+
+This addendum applies to the static skills package in `plugins/codex-seo` and its listing. It does not replace the repository and checkout-script data-flow details above. The package contains instruction and reference files. It has no server, telemetry, account, or storage code and does not itself collect or transmit data.
+
+### Information and purpose
+
+When a user invokes these skills, the ChatGPT or Codex host may process the user's prompts, supplied URLs, page content, account or workspace context, and generated results to provide the requested assistance. The skills use this information to guide the requested SEO review. The host service processes it under its own privacy terms and the user's account or workspace settings.
+
+### Recipients
+
+The primary recipient is the ChatGPT or Codex host service. When host browsing or search tools are invoked, relevant URLs, page requests, or content may also be sent to the accessed public site and any host-selected browsing or search provider as part of the host tool flow; those services' terms apply. This package does not independently send information to SEO vendors. If a user separately enables or invokes a connected service, information sent to that service is governed by its own terms and the user's configuration. The checkout scripts and optional extensions documented elsewhere in this file have their own distinct data flows.
+
+### Retention
+
+The skills package itself retains no user data. The host service and any separately used connected service determine retention under their respective policies, product settings, and account controls. ChatGPT controls vary by plan, account, and workspace settings; see [OpenAI's consumer data and privacy controls](https://help.openai.com/en/articles/7039943-how-openai-handles-data-in-consumer-services). This repository cannot set or promise a fixed retention period for those services.
+
+### User controls
+
+Users choose what to include in prompts and which host tools or connected services to use. Avoid including credentials or other sensitive information. Use the host's available privacy, history, and connected-service controls to manage processing and retention.
+
+### Support
+
+For questions about this package, open an issue at <https://github.com/helx0071/codex-seo/issues>.

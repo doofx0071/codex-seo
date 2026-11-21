@@ -35,6 +35,8 @@ def _fixture_root(tmp_path: Path) -> Path:
 def test_dispatch_is_allowlisted_and_rejects_traversal(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
     assert runtime._resolve_script(root, "render_page.py", None).name == "render_page.py"
+    (root / "scripts" / "ecommerce_page_check.py").write_text("print('offline')\n", encoding="utf-8")
+    assert runtime._resolve_script(root, "ecommerce_page_check.py", None).name == "ecommerce_page_check.py"
     assert runtime._resolve_script(root, "generate.py", "banana").name == "generate.py"
     with pytest.raises(ValueError):
         runtime._resolve_script(root, "../render_page.py", None)

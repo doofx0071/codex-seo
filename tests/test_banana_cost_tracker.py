@@ -101,7 +101,7 @@ def test_concurrent_logs_keep_aggregates_correct(tmp_path) -> None:
     calls = 20
 
     with ThreadPoolExecutor(max_workers=calls) as pool:
-        list(
+        results = list(
             pool.map(
                 lambda i: _run(
                     tmp_path, "log", "--model", MODEL, "--resolution", "1K",
@@ -110,6 +110,9 @@ def test_concurrent_logs_keep_aggregates_correct(tmp_path) -> None:
                 range(calls),
             )
         )
+
+    failed = [result for result in results if result.returncode != 0]
+    assert not failed, f"{len(failed)} log calls failed: {failed[0].stderr}"
 
     ledger = _ledger(tmp_path)
     assert ledger["total_images"] == calls
