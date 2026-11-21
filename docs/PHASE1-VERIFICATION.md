@@ -390,7 +390,7 @@ Both checker runs parsed one Product/Offer and matched the visible identity `Can
 
 ## Release verification continuation (2026-11-21)
 
-This continuation records the current local release-candidate checks and desktop evidence. The checkout remains on `codex-native-support`, ahead of `origin/codex-native-support` by four commits. Existing edits and untracked files were preserved. The repository is still in the Claude-SEO fork network; its public plugin-directory submission has not been made. Plugin version 0.1.2 is a USER-scoped PRIVATE plugin release, not a public directory release. No purchase or checkout interaction, live-site write, push, merge, fork detachment, or publication occurred as part of these checks.
+This continuation records local release-candidate checks and desktop evidence taken before the source-branch push recorded below. At that time, the checkout was on `codex-native-support`, four commits ahead of `origin/codex-native-support`. Existing edits and untracked files were preserved. The repository was still in the Claude-SEO fork network; its public plugin-directory submission had not been made. Plugin version 0.1.2 was a USER-scoped PRIVATE plugin release, not a public directory release. No purchase or checkout interaction, live-site write, merge, fork detachment, or publication occurred as part of those checks.
 
 ### Current automated verification
 
@@ -442,3 +442,11 @@ The Windows focused run was reported as 107 passed, 4 skipped, and 79 subtests. 
 ### Package and supporting checks
 
 On the same candidate, the package archive contained 79 files and passed ZIP integrity validation; its SHA-256 was `755dfdc49f2b52531827f588e948b2c8e13eddc4b17f631c1aadc70eac634b4f`. Cleanup passed; portability passed for 40 skills; the skill mirror check passed for 76 files; consistency reported 742 files with no errors or warnings; and `git diff --check` was clean. A current source-checkout documentation test also passed: `wsl.exe -d Ubuntu-24.04 -- /home/zirc/.cache/codex-seo-phase1-wsl-20261120/venv/bin/python -m pytest /mnt/c/dev/codex-seo/tests/test_no_em_dash.py -q` returned 4 passed.
+
+## Source branch push and repository access update (2026-11-21)
+
+After the recorded QA checks, commit `d354bb8c46f1a43a4fcddcb809aadcc2a333c730` (`Prepare SEO plugin verification updates`) was created and pushed normally to `origin/codex-native-support`. The remote branch now points to that commit, and the local branch is even with its upstream. The earlier statement that the branch was four commits ahead describes the pre-push snapshot only. The untracked `.venv-posix/` directory remains preserved and was not included in the commit.
+
+No GitHub Actions runs or commit status checks were visible for the pushed branch at the time of this update. The repository remains public and attached to the `AgriciDaniel/claude-seo` fork network. `gh api repos/helx0071/codex-seo` reported `permissions.admin: false` for the authenticated account, so detaching the fork is blocked by the current credential. No pull request, merge, detach, or public plugin-directory submission has occurred. GitHub documents that leaving the fork network is permanent and requires repository admin access; an account with repository administration must perform that step.
+
+The WSL test results above apply to the source snapshot tested before the push. The pushed commit contains that tested source and the related release documentation. The Codex Desktop cache was still on private plugin version 0.1.1, ChatGPT Work did not expose the invoked version, and the full visible Product/Offer fact comparison remains incomplete. These checks therefore do not establish a confirmed 0.1.2 invocation in both desktop hosts or complete Gate 2. No additional product-page, checkout, or indexing claim is made here.
