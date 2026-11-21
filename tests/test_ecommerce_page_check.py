@@ -53,6 +53,70 @@ def test_matches_visible_offer_facts():
     assert result["schema_validation"]["findings"]
 
 
+def test_matches_explicit_visible_data_test_price_and_availability_markers():
+    html = page(
+        '<h1>Trail Shoe</h1><span data-test="product-price-display-price">$89.99</span>'
+        '<p data-test="product-overview-availability">Available now</p>',
+        product(price="89.99", priceCurrency="USD", availability="https://schema.org/InStock"),
+    )
+    result = check_page(html)
+    assert result["visible_facts"]["amount"] == {"status": "available", "value": "89.99"}
+    assert result["visible_facts"]["currency"]["status"] == "ambiguous"
+    assert result["visible_facts"]["availability"] == {"status": "available", "value": "InStock"}
+    assert result["visible_facts"]["selected_variant"]["status"] == "unavailable"
+    assert result["comparisons"]["amount"]["status"] == "match"
+    assert result["comparisons"]["availability"]["status"] == "match"
+
+
+def test_hidden_semantic_price_and_availability_markers_are_excluded():
+    html = page(
+        '<h1>Trail Shoe</h1><span hidden data-test="product-price-display-price">$89.99</span>'
+        '<p aria-hidden="true" data-test="product-overview-availability">Available now</p>',
+        product(price="89.99", priceCurrency="USD", availability="https://schema.org/InStock"),
+    )
+    result = check_page(html)
+    assert result["visible_facts"]["amount"]["status"] == "unavailable"
+    assert result["visible_facts"]["availability"]["status"] == "unavailable"
+
+
+def test_conflicting_semantic_price_and_availability_markers_are_ambiguous():
+    html = page(
+        '<h1>Trail Shoe</h1><span data-test="product-price-display-price">$89.99</span>'
+        '<span data-test="product-price-display-price">$99.99</span>'
+        '<p data-test="product-overview-availability">Available now</p>'
+        '<p data-test="product-overview-availability">Sold out</p>',
+        product(price="89.99", priceCurrency="USD", availability="https://schema.org/InStock"),
+    )
+    result = check_page(html)
+    assert result["visible_facts"]["amount"]["status"] == "ambiguous"
+    assert result["visible_facts"]["availability"]["status"] == "ambiguous"
+
+
+def test_identical_responsive_semantic_price_markers_collapse():
+    html = page(
+        '<h1>Trail Shoe</h1><span data-test="product-price-display-price">$89.99</span>'
+        '<span class="mobile-price" data-test="product-price-display-price">$89.99</span>'
+        '<p data-test="product-overview-availability">Available now</p>',
+        product(price="89.99", priceCurrency="USD", availability="https://schema.org/InStock"),
+    )
+    result = check_page(html)
+    assert result["visible_facts"]["amount"] == {"status": "available", "value": "89.99"}
+    assert result["comparisons"]["amount"]["status"] == "match"
+
+
+def test_semantic_markers_ignore_hidden_descendant_text_but_keep_visible_siblings():
+    html = page(
+        '<h1>Trail Shoe</h1><span data-test="product-price-display-price">$89.99'
+        '<span hidden>$99.99</span></span>'
+        '<p data-test="product-overview-availability">Available now'
+        '<span aria-hidden="true">Sold out</span></p>',
+        product(price="89.99", priceCurrency="USD", availability="https://schema.org/InStock"),
+    )
+    result = check_page(html)
+    assert result["visible_facts"]["amount"] == {"status": "available", "value": "89.99"}
+    assert result["visible_facts"]["availability"] == {"status": "available", "value": "InStock"}
+
+
 def test_reports_conflicting_price_currency_and_availability():
     html = page(
         '<h1>Trail Shoe</h1><div itemprop="offers"><span itemprop="price" content="99.00">$99.00</span>'

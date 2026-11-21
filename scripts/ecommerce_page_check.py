@@ -115,6 +115,29 @@ def _visible_facts(html: str) -> dict:
             currencies.extend(codes)
             if not codes:
                 ambiguous_currency_symbol = True
+
+    # Some storefronts expose product facts through explicit UI test hooks
+    # instead of microdata. Only the rendered text of these narrowly named,
+    # visible markers is evidence; data attributes and structured data are not.
+    for element in soup.find_all(attrs={"data-test": True}):
+        if not _visible(element):
+            continue
+        marker = str(element.get("data-test", "")).strip().casefold()
+        text = " ".join(str(node).strip() for node in element.find_all(string=True)
+                        if str(node).strip() and _visible(node.parent))
+        if not text:
+            continue
+        if marker == "product-price-display-price":
+            matches = list(_PRICE_TEXT.finditer(text))
+            if matches:
+                prices.extend(match.group(1) for match in matches)
+                for match in matches:
+                    if match.group(2):
+                        currencies.append(match.group(2).upper())
+                    elif re.search(r"[$€£¥]", match.group(0)):
+                        ambiguous_currency_symbol = True
+        elif marker == "product-overview-availability":
+            availability_text.append(text)
     selected_values: list[str] = []
     selected_labels: list[str] = []
     for option in soup.select("select option[selected]"):
