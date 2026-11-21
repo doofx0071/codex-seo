@@ -20,6 +20,35 @@ from check_codex_cleanup import _is_scannable_file  # noqa: E402
 
 
 class TestCodexCleanupScanner(unittest.TestCase):
+    def test_allows_specific_provenance_but_rejects_unrelated_claude_code(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder) / "checkout"
+            phase1 = root / "docs" / "PHASE1-VERIFICATION.md"
+            workflow = root / "docs" / "WORKFLOW-public-private.md"
+            unrelated = root / "docs" / "other.md"
+            phase1.parent.mkdir(parents=True)
+            phase1.write_text(
+                "Historical " + "Claude" + "-SEO behavior. Fork: " + "AgriciDaniel/" + "claude" + "-seo.\n",
+                encoding="utf-8",
+            )
+            workflow.write_text("Upstream: [" + "AgriciDaniel/" + "claude" + "-seo]\n", encoding="utf-8")
+            unrelated.write_text("Claude" + " Code integration still remains.\n", encoding="utf-8")
+            paths = (
+                "docs/PHASE1-VERIFICATION.md\0"
+                "docs/WORKFLOW-public-private.md\0"
+                "docs/other.md\0\0"
+            ).encode()
+            output = io.StringIO()
+
+            with mock.patch.object(check_codex_cleanup, "ROOT", root), \
+                    mock.patch.object(check_codex_cleanup, "CRAWLER_FILES", ()), \
+                    mock.patch.object(check_codex_cleanup.subprocess, "check_output", return_value=paths), \
+                    contextlib.redirect_stdout(output):
+                status = check_codex_cleanup.main()
+
+            self.assertEqual(status, 1)
+            self.assertEqual(output.getvalue(), "docs/other.md:1: " + "Claude" + " Code integration still remains.\n")
+
     def test_regular_checkout_file_is_scannable(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder) / "checkout"

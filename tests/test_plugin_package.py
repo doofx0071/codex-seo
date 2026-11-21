@@ -68,15 +68,15 @@ class TestPluginPackage(unittest.TestCase):
         self.assertEqual(interface["composerIcon"], "./assets/composer-icon.png")
         self.assertEqual(
             interface["privacyPolicyURL"],
-            "https://github.com/helx0071/codex-seo/blob/main/PRIVACY.md",
+            "https://github.com/doofx0071/codex-seo/blob/main/PRIVACY.md",
         )
-        self.assertEqual(interface["supportURL"], "https://github.com/helx0071/codex-seo/issues")
+        self.assertEqual(interface["supportURL"], "https://github.com/doofx0071/codex-seo/issues")
         self.assertTrue(0 < len(interface["shortDescription"]) <= 30)
 
         privacy = (ROOT / "PRIVACY.md").read_text(encoding="utf-8")
         for required_notice in (
             "Skills-only plugin privacy listing addendum", "Information and purpose", "Recipients",
-            "Retention", "User controls", "https://github.com/helx0071/codex-seo/issues",
+            "Retention", "User controls", "https://github.com/doofx0071/codex-seo/issues",
             "host-selected browsing or search provider", "accessed public site",
             "those services' terms apply",
         ):
@@ -116,7 +116,7 @@ class TestPluginPackage(unittest.TestCase):
         self.assertEqual(
             (refs / "notices" / "CONTRIBUTORS.md").read_bytes(),
             (ROOT / "CONTRIBUTORS.md").read_bytes().replace(
-                b"](CONTRIBUTING.md)", b"](https://github.com/helx0071/codex-seo/blob/HEAD/CONTRIBUTING.md)"
+                b"](CONTRIBUTING.md)", b"](https://github.com/doofx0071/codex-seo/blob/HEAD/CONTRIBUTING.md)"
             ),
         )
         self.assertEqual(

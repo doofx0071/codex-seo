@@ -27,7 +27,7 @@ ORIGIN = crawl.Origin("https", "shop.example")
 
 def test_shopify_user_agent_uses_codex_identity_for_robots_rules() -> None:
     assert crawl.USER_AGENT == (
-        "CodexSEO-ShopifyCrawler (+https://github.com/helx0071/codex-seo)"
+        "CodexSEO-ShopifyCrawler (+https://github.com/doofx0071/codex-seo)"
     )
     robots = crawl.RobotFileParser()
     robots.parse([

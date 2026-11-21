@@ -156,9 +156,9 @@ def validate_metadata(manifest_bytes: bytes, skill_files: dict[Path, bytes]) -> 
     }:
         raise ValueError("Expected the documented OpenAI privacy policy URL field")
     require_text(interface, *interface)
-    if interface["privacyPolicyURL"] != "https://github.com/helx0071/codex-seo/blob/main/PRIVACY.md":
+    if interface["privacyPolicyURL"] != "https://github.com/doofx0071/codex-seo/blob/main/PRIVACY.md":
         raise ValueError("Unexpected OpenAI privacy policy URL")
-    if interface["supportURL"] != "https://github.com/helx0071/codex-seo/issues":
+    if interface["supportURL"] != "https://github.com/doofx0071/codex-seo/issues":
         raise ValueError("Unexpected OpenAI support URL")
     if interface["logo"] != "./assets/logo.png" or interface["composerIcon"] != "./assets/composer-icon.png":
         raise ValueError("OpenAI logo and composer icon must use the contained PNG package assets")

@@ -190,7 +190,7 @@ Responsible disclosures incorporated into v2.2.0. Thank you for reporting privat
 
 ## How to Contribute
 
-See [CONTRIBUTING.md](https://github.com/helx0071/codex-seo/blob/HEAD/CONTRIBUTING.md) for guidelines on submitting pull requests,
+See [CONTRIBUTING.md](https://github.com/doofx0071/codex-seo/blob/HEAD/CONTRIBUTING.md) for guidelines on submitting pull requests,
 creating extensions, and participating in future challenges.
 
 Join the community:

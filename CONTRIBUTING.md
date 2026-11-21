@@ -1,6 +1,6 @@
 # Contributing to Codex SEO
 
-Report reproducible bugs in [GitHub Issues](https://github.com/helx0071/codex-seo/issues). Include your Codex or ChatGPT surface, the checkout commit or plugin version, the minimal prompt or command, and the expected and observed behavior. Remove credentials and private audit data from logs. Follow [SECURITY.md](SECURITY.md) for a vulnerability report.
+Report reproducible bugs in [GitHub Issues](https://github.com/doofx0071/codex-seo/issues). Include your Codex or ChatGPT surface, the checkout commit or plugin version, the minimal prompt or command, and the expected and observed behavior. Remove credentials and private audit data from logs. Follow [SECURITY.md](SECURITY.md) for a vulnerability report.
 
 ## Development
 

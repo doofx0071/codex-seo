@@ -112,4 +112,4 @@ Users choose what to include in prompts and which host tools or connected servic
 
 ### Support
 
-For questions about this package, open an issue at <https://github.com/helx0071/codex-seo/issues>.
+For questions about this package, open an issue at <https://github.com/doofx0071/codex-seo/issues>.

@@ -4,7 +4,7 @@
   "version": "0.1.2",
   "description": "Audit websites and web projects with observable SEO evidence and a prioritized action plan.",
   "author": { "name": "Codex SEO contributors" },
-  "repository": "https://github.com/helx0071/codex-seo",
+  "repository": "https://github.com/doofx0071/codex-seo",
   "license": "MIT",
   "keywords": ["SEO", "website audit", "structured data", "AI search"],
   "extensions": {
@@ -16,8 +16,8 @@
         "developerName": "Codex SEO contributors",
         "category": "Data & Analytics",
         "defaultPrompt": "Audit this website and give me a prioritized SEO action plan. Cite what you could verify.",
-        "privacyPolicyURL": "https://github.com/helx0071/codex-seo/blob/main/PRIVACY.md",
-        "supportURL": "https://github.com/helx0071/codex-seo/issues",
+        "privacyPolicyURL": "https://github.com/doofx0071/codex-seo/blob/main/PRIVACY.md",
+        "supportURL": "https://github.com/doofx0071/codex-seo/issues",
         "logo": "./assets/logo.png",
         "composerIcon": "./assets/composer-icon.png"
       }

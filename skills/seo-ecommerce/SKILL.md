@@ -48,12 +48,19 @@ For a local product-fact comparison, save the raw or rendered page HTML and
 run `./scripts/codex-seo run ecommerce_page_check.py <local-html>`. This
 checkout-only checker runs offline and compares deterministic visible facts
 with their associated Product/Offer JSON-LD. Hidden or ambiguous evidence is
-reported as unavailable or ambiguous. It reads visible price/availability
-microdata and can extract one unambiguous price plus an adjacent supported
-currency code from a single visible Offer scope. Symbol-only currencies are
-ambiguous because `$`, for example, does not identify an ISO currency. The
-checker reads HTML source, not computed browser styles or live variant state;
-when layout CSS or JavaScript controls visibility, verify in a browser.
+reported as unavailable or ambiguous. For price and availability, it reads
+visible microdata, a single visible Offer scope, and the narrow semantic UI
+markers `data-test="product-price-display-price"` and
+`data-test="product-overview-availability"`. It uses rendered text from those
+markers only; hidden marker elements and hidden descendant text are excluded.
+Identical responsive price copies collapse, while conflicting values remain
+ambiguous. A currency is comparable only when a visible code is present; a
+symbol such as `$` does not identify an ISO currency. The checker reads an HTML
+snapshot and applies conservative checks for common hidden attributes, classes,
+and inline styles. It cannot compute external or stylesheet CSS, run JavaScript,
+or determine the live selected variant. Verify CSS- or JavaScript-controlled
+visibility and live variant state in a browser, and label them unavailable when
+that evidence is not accessible.
 
 ### Store Discovery and Sample Selection
 

@@ -4,7 +4,7 @@
 
 If you discover a security vulnerability, please report it responsibly. Do **not** open a public issue.
 
-1. Open a private [GitHub Security Advisory](https://github.com/helx0071/codex-seo/security/advisories/new) on this repository. Use the private security form when available.
+1. Open a private [GitHub Security Advisory](https://github.com/doofx0071/codex-seo/security/advisories/new) on this repository. Use the private security form when available.
 2. If the advisory form is unavailable to you, open a public issue titled "Security contact request" with no technical detail. The maintainer will reply with a private channel.
 3. Encrypt sensitive disclosures if you can. Request a public encryption key in the private advisory thread.
 

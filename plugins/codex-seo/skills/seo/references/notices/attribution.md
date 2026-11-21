@@ -1,6 +1,6 @@
 # Source and license notices
 
-This portable workflow adapts the SEO guides and specialist prompts from [Codex SEO](https://github.com/helx0071/codex-seo), an independent adaptation of Daniel Agrici's [upstream project](https://github.com/AgriciDaniel/claude-seo). The guide and prompt adaptations use the host's available evidence and omit the checkout's executable workflows.
+This portable workflow adapts the SEO guides and specialist prompts from [Codex SEO](https://github.com/doofx0071/codex-seo), an independent adaptation of Daniel Agrici's [upstream project](https://github.com/AgriciDaniel/claude-seo). The guide and prompt adaptations use the host's available evidence and omit the checkout's executable workflows.
 
 - [MIT permission notice](LICENSE)
 - [Shared component copyright and source notice](upstream-LICENSE.txt). This notice appears verbatim across the upstream SEO components.

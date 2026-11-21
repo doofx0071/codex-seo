@@ -11,8 +11,8 @@ authors = [
 keywords = ["seo", "openai-codex", "chatgpt", "ai-tools", "schema-markup", "e-e-a-t", "geo"]
 
 [project.urls]
-Homepage = "https://github.com/helx0071/codex-seo/tree/codex-native-support#readme"
-Repository = "https://github.com/helx0071/codex-seo"
+Homepage = "https://github.com/doofx0071/codex-seo/tree/main#readme"
+Repository = "https://github.com/doofx0071/codex-seo"
 
 [tool.ruff]
 target-version = "py311"
